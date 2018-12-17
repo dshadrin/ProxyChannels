@@ -1,0 +1,7 @@
+build/
+build-lnx/
+build-mingw/
+dist/
+.idea/
+cmake-build-debug/
+cmake-build-release/

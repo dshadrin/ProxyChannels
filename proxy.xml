@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<proxy>
+  <logger>
+      <severity>TRACE</severity>
+      <severity_console>DEBUG</severity_console>
+      <log_name>Log_%Y%m%d_%H%M%S_rpc.log</log_name>
+      <sinks>
+        <sink>
+            <name>CONSOLE</name>
+            <severity>INFO</severity>
+        </sink>
+        <sink>
+            <name>FILE</name>
+            <template>%Y%m%d_%H%M%S.log</template>
+            <severity>DEBUG</severity>
+        </sink>
+    </sinks>
+    <client>
+      <host>localhost</host>
+      <port>2100</port>
+      <retry>5</retry>
+      <max_message_size>2048</max_message_size>
+      <module_tag_size>4</module_tag_size>
+      <severity>DEBUG</severity>
+    </client>
+  </logger>
+  <actors>
+    <actor>
+      <!-- id - unique number for actors -->
+      <id>1</id>
+      <!-- name - predeclares value in actor.h -->
+      <name>TCP-SERVER</name>
+      <port>2002</port>
+      <input_buffer_size>4096</input_buffer_size>
+      <protocol>TELNET</protocol>
+    </actor>
+    <!-- this actor used for oscar protocol, oscar protocol used for logger -->
+    <actor>
+      <id>5</id>
+      <name>TCP-SERVER</name>
+      <port>2100</port>
+      <input_buffer_size>6</input_buffer_size>
+      <protocol>OSCAR</protocol>
+    </actor>
+    <actor>
+      <id>6</id>
+      <name>UART-CLIENT</name>
+      <port>1</port>
+      <port_name>
+        <windows>COM</windows>
+        <!-- for linux can be a several names - /dev/tty, /dev/ttyS, etc - for detail see docs by you linux system -->
+        <!-- by default is /dev/tty -->
+        <linux>/dev/ttyS</linux>
+      </port_name>
+      <input_buffer_size>1024</input_buffer_size>
+      <option>
+        <!-- baud_rate - 921600, 460800, 230400, 115200, 57600, 38400, 19200, 14400, 9600, 7200, 4800, 2400, 1800, 1200, 600, 300 -->
+        <!-- by default is 115200 -->
+        <baud_rate>115200</baud_rate>
+        <!-- flow_control - NONE, HARD, SOFT -->
+        <!-- SOFT is XON/XOFF -->
+        <!-- by default is NONE -->
+        <flow_control>NONE</flow_control>
+        <!-- parity - NONE, ODD, EVEN -->
+        <!-- by default is NONE -->
+        <parity>NONE</parity>
+        <!-- parity - 1, 1.5, 2 -->
+        <!-- by default is 1 -->
+        <stop_bits>1</stop_bits>
+        <!-- character_size - 7, 8 -->
+        <!-- by default is 8 -->
+        <character_size>8</character_size>
+      </option>
+    </actor>
+    <actor>
+      <id>7</id>
+      <name>LOGGER-ADAPTOR</name>
+      <protocol>OSCAR</protocol>
+    </actor>
+  </actors>
+  <not-used>
+    <actor>
+      <id>2</id>
+      <name>TCP-SERVER</name>
+      <port>2005</port>
+      <input_buffer_size>4096</input_buffer_size>
+      <protocol>TELNET</protocol>
+    </actor>
+    <actor>
+      <id>3</id>
+      <name>TCP-SERVER</name>
+      <port>2006</port>
+      <input_buffer_size>4096</input_buffer_size>
+      <protocol>TELNET</protocol>
+    </actor>
+    <actor>
+      <id>4</id>
+      <name>TCP-SERVER</name>
+      <port>2007</port>
+      <input_buffer_size>4096</input_buffer_size>
+      <protocol>TELNET</protocol>
+    </actor>
+  </not-used>
+  <channels>
+    <channel>
+      <!-- id - unique number for channel -->
+      <id>1</id>
+      <!-- source - should be defined in actors section -->
+      <source>1</source>
+      <!-- desination - should be defined in actors section -->
+      <destination>6</destination>
+      <options>
+        <filters>
+          <!-- cmd_filter - filter input strings by $CMD$ prefix -->
+          <!-- if $CMD$ prefix present the string will executed by 'system' call instead of transfer to dectination -->
+          <!-- by default is false -->
+          <cmd_filter>false</cmd_filter>
+        </filters>
+      </options>
+    </channel>
+    <channel>
+      <id>2</id>
+      <source>6</source>
+      <destination>1</destination>
+    </channel>
+    <channel>
+      <id>3</id>
+      <source>5</source>
+      <destination>7</destination>
+    </channel>
+  </channels>
+</proxy>
