@@ -38,10 +38,10 @@ CLogClient::CLogClient(const boost::property_tree::ptree& pt) :
 
     do
     {
-        std::cout << "Try connect to logger: " << retryNumber << std::endl;
+        std::cout << "Try connect to logger: " << retryNumber++ << std::endl;
         isConnected = Connect();
 
-    } while (!m_socket.is_open() && retryNumber++ <= retryCount);
+    } while (!isConnected && retryNumber <= retryCount);
 
     if (!isConnected)
     {
@@ -155,6 +155,11 @@ bool CLogClient::Connect()
     {
         status = false;
         std::cerr << "Logger connection error: " << ec.message() << std::endl;
+    }
+    else
+    {
+        std::cerr << "Logger client connected: " << m_socket.local_endpoint(ec).address().to_string() << ":" << m_socket.local_endpoint(ec).port() << " -> "
+                                                 << m_socket.remote_endpoint(ec).address().to_string() << ":" << m_socket.remote_endpoint(ec).port() << std::endl ;
     }
 
     return status;
