@@ -35,7 +35,7 @@ namespace oscar
                 {
                     if ( end > _Fp.end_ptr( ) )
                     {
-                        throw std::runtime_error( "SNAC structure error" );
+                        throw std::runtime_error( "Parsing SNAC structure error" );
                     }
                 }
 
@@ -47,7 +47,7 @@ namespace oscar
                         end += tlv::get_size( begin );
                         if ( end > fp.end_ptr( ) )
                         {
-                            throw std::runtime_error( "SNAC structure error" );
+                            throw std::runtime_error( "Iterate SNAC structure error" );
                         }
                     }
                     return *this;

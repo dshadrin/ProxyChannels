@@ -208,11 +208,11 @@ void CLogClient::WriteNextMessage()
                         (std::move(package->tag), std::move(package->severity), std::move(package->message), std::move(package->lchannel), std::move(package->timestamp.tv_sec), std::move(package->timestamp.tv_nsec));
                     break;
                 case ELogCommand::eChangeFile:
-                    m_currentMessage = oscar::ostd::make_flap_package<FlapChannel::Control, oscar::ostd::Snac_NewFile, std::string, std::string, time_t, int64_t>
+                    m_currentMessage = oscar::ostd::make_flap_package<FlapChannel::Control, oscar::ostd::Snac_NewFile, std::string, std::string, uint8_t, time_t, int64_t>
                         (std::move(package->message), std::move(package->tag), std::move(package->lchannel), std::move(package->timestamp.tv_sec), std::move(package->timestamp.tv_nsec));
                     break;
                 case ELogCommand::eStop:
-                    m_currentMessage = oscar::ostd::make_flap_package<FlapChannel::Control, oscar::ostd::Snac_Stop, time_t, int64_t>
+                    m_currentMessage = oscar::ostd::make_flap_package<FlapChannel::Control, oscar::ostd::Snac_Stop, uint8_t, time_t, int64_t>
                         (std::move(package->lchannel), std::move(package->timestamp.tv_sec), std::move(package->timestamp.tv_nsec));
                     break;
                 default:

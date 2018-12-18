@@ -1,7 +1,7 @@
 @echo off
 set path=d:\msys64\mingw64\bin;%PATH%
-rem set BOOST_INCLUDEDIR=d:\usr\include\boost-1_68
-rem set BOOST_LIBRARYDIR=%BOOST_LIBRARYDIR%64
+set BOOST_INCLUDEDIR=d:\usr\include\boost-1_68
+set BOOST_LIBRARYDIR=%BOOST_LIBRARYDIR%64
 rmdir /S /Q build-mingw
 mkdir build-mingw
 cd build-mingw
