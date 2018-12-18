@@ -22,6 +22,7 @@ public:
     void Start(void) override;
     void Stop(void) override;
     std::string GetName() const override { return m_strPortName; }
+    static std::string MakePortName(boost::property_tree::ptree& pt);
 
 private:
     void ReadStart(void);
@@ -31,7 +32,6 @@ private:
     void WriteStart(void);
     void WriteComplete(const boost::system::error_code& error);
 
-    static std::string MakePortName(boost::property_tree::ptree& pt);
     static boost::asio::serial_port_base::flow_control::type FlowControlType(boost::property_tree::ptree& pt, std::string* str);
     static boost::asio::serial_port_base::parity::type ParityType(boost::property_tree::ptree& pt, std::string* str);
     static boost::asio::serial_port_base::stop_bits::type StopBits(boost::property_tree::ptree& pt, std::string* str);

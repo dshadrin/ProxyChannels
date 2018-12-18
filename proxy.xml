@@ -26,6 +26,14 @@
             <prefix>SP01</prefix>
             <suffix>uart</suffix>
         </sink>
+        <sink>
+            <channel>2</channel>
+            <name>FILE</name>
+            <template>%Y%m%d_%H%M%S_2.log</template>
+            <severity>DEBUG</severity>
+            <prefix>SP01</prefix>
+            <suffix>raw</suffix>
+        </sink>
       </sinks>
     <client>
       <host>localhost</host>
@@ -100,6 +108,16 @@
       <tag>SP01</tag>
       <filter_esc>true</filter_esc>
     </actor>
+    <actor>
+      <id>9</id>
+      <name>LOGGER-ADAPTOR</name>
+      <protocol>RAW</protocol>
+      <severity>INFO</severity>
+      <channel>2</channel>
+      <!-- tag defines name of data source (module name in logs) -->
+      <tag>SP01</tag>
+      <filter_esc>false</filter_esc>
+    </actor>
   </actors>
   <not-used>
     <actor>
@@ -155,6 +173,11 @@
       <id>4</id>
       <source>6</source>
       <destination>8</destination>
+    </channel>
+    <channel>
+      <id>5</id>
+      <source>6</source>
+      <destination>9</destination>
     </channel>
   </channels>
 </proxy>

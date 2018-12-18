@@ -54,7 +54,10 @@ CActor* CActor::MakeActor(boost::property_tree::ptree& pt)
             actor = new CTcpServerActor(pt);
 
         else if (actorName == UART_CLIENT)
+        {
+            LOG_DEBUG << "Try to open serial port: " << CTerminal::MakePortName(pt);
             actor = new CTerminal(pt);
+        }
 
         else if (actorName == LOGGER_ADAPTOR)
         {
