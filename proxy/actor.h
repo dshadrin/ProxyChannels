@@ -1,9 +1,16 @@
 #pragma once
 
 //////////////////////////////////////////////////////////////////////////
+#define NO_NAME "NO_NAME"
 #define TCP_SERVER "TCP-SERVER"
 #define UART_CLIENT "UART-CLIENT"
 #define LOGGER_ADAPTOR "LOGGER-ADAPTOR"
+
+#define NO_PROTO "NO_PROTO"
+#define PROTO_OSCAR "OSCAR"
+#define PROTO_TELNET "TELNET"
+#define PROTO_RAW "RAW"
+
 
 //////////////////////////////////////////////////////////////////////////
 enum class ENetProtocol : uint8_t

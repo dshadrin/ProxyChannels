@@ -6,15 +6,27 @@
       <log_name>Log_%Y%m%d_%H%M%S_rpc.log</log_name>
       <sinks>
         <sink>
+            <channel>0</channel>
             <name>CONSOLE</name>
             <severity>INFO</severity>
         </sink>
         <sink>
+            <channel>0</channel>
             <name>FILE</name>
-            <template>%Y%m%d_%H%M%S.log</template>
+            <template>%Y%m%d_%H%M%S_0.log</template>
             <severity>DEBUG</severity>
+            <prefix>Monitor</prefix>
+            <suffix></suffix>
         </sink>
-    </sinks>
+        <sink>
+            <channel>1</channel>
+            <name>FILE</name>
+            <template>%Y%m%d_%H%M%S_1.log</template>
+            <severity>DEBUG</severity>
+            <prefix>SP01</prefix>
+            <suffix>uart</suffix>
+        </sink>
+      </sinks>
     <client>
       <host>localhost</host>
       <port>2100</port>
@@ -53,6 +65,7 @@
         <linux>/dev/ttyS</linux>
       </port_name>
       <input_buffer_size>1024</input_buffer_size>
+      <protocol>RAW</protocol>
       <option>
         <!-- baud_rate - 921600, 460800, 230400, 115200, 57600, 38400, 19200, 14400, 9600, 7200, 4800, 2400, 1800, 1200, 600, 300 -->
         <!-- by default is 115200 -->
@@ -76,6 +89,15 @@
       <id>7</id>
       <name>LOGGER-ADAPTOR</name>
       <protocol>OSCAR</protocol>
+    </actor>
+    <actor>
+      <id>8</id>
+      <name>LOGGER-ADAPTOR</name>
+      <protocol>RAW</protocol>
+      <severity>INFO</severity>
+      <channel>1</channel>
+      <!-- tag defines name of data source (module name in logs) -->
+      <tag>SP01</tag>
     </actor>
   </actors>
   <not-used>
@@ -127,6 +149,11 @@
       <id>3</id>
       <source>5</source>
       <destination>7</destination>
+    </channel>
+    <channel>
+      <id>4</id>
+      <source>6</source>
+      <destination>8</destination>
     </channel>
   </channels>
 </proxy>

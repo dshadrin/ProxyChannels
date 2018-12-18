@@ -1,33 +1,33 @@
 #include "stdinc.h"
-#include "netloggeradapter.h"
+#include "oscar_logger_adapter.h"
 #include "oscar/flap_parser.h"
 #include <iostream>
 
 extern void DirectSendToLogger(std::shared_ptr<SLogPackage> logPackage);
 
-CNetLoggerAdaptor::CNetLoggerAdaptor(boost::property_tree::ptree& pt) :
+COscarLoggerAdaptor::COscarLoggerAdaptor(boost::property_tree::ptree& pt) :
     CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
     m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", "RAW")))
 {
-    m_sigOutputMessage.connect(std::bind(&CNetLoggerAdaptor::DoLog, this, std::placeholders::_1));
+    m_sigOutputMessage.connect(std::bind(&COscarLoggerAdaptor::DoLog, this, std::placeholders::_1));
 }
 
-void CNetLoggerAdaptor::Start()
+void COscarLoggerAdaptor::Start()
 {
 
 }
 
-void CNetLoggerAdaptor::Stop()
+void COscarLoggerAdaptor::Stop()
 {
     m_sigOutputMessage.disconnect_all_slots();
 }
 
-std::string CNetLoggerAdaptor::GetName() const
+std::string COscarLoggerAdaptor::GetName() const
 {
     return LOGGER_ADAPTOR;
 }
 
-void CNetLoggerAdaptor::DoLog(PMessage msg)
+void COscarLoggerAdaptor::DoLog(PMessage msg)
 {
     if (m_protocol == ENetProtocol::eOscar)
     {

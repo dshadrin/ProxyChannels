@@ -2,11 +2,11 @@
 #include "actor.h"
 
 //////////////////////////////////////////////////////////////////////////
-class CNetLoggerAdaptor : public CActor
+class COscarLoggerAdaptor : public CActor
 {
 public:
-    CNetLoggerAdaptor(boost::property_tree::ptree& pt);
-    virtual ~CNetLoggerAdaptor() = default;
+    COscarLoggerAdaptor(boost::property_tree::ptree& pt);
+    virtual ~COscarLoggerAdaptor() = default;
 
     void Start() override;
     void Stop() override;

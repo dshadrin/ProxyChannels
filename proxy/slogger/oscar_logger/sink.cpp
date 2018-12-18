@@ -9,34 +9,65 @@
 #include "thread_pool.h"
 #include <iostream>
 
-CSink* CSink::MakeSink(const std::string& name)
+//////////////////////////////////////////////////////////////////////////
+// Factory method
+//////////////////////////////////////////////////////////////////////////
+CSink* CSink::MakeSink(const std::string& name, const boost::property_tree::ptree& pt)
 {
     std::string sinkName = boost::algorithm::to_upper_copy(name);
     boost::algorithm::trim(sinkName);
 
     if (sinkName == CONSOLE_SINK)
-        return new CConsoleSink();
+        return new CConsoleSink(pt);
 
     else if (sinkName == FILE_SINK)
-        return new CFileSink();
+        return new CFileSink(pt);
 
     return nullptr;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Base class
+//////////////////////////////////////////////////////////////////////////
 void CSink::SetProperty(const std::string& name, const std::string& value)
 {
     if (name == "severity")
         m_severity = StringToSeverity(value);
+
+    else if (name == "channel")
+        m_channel = std::stoi(value);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Console sink
+//////////////////////////////////////////////////////////////////////////
+CConsoleSink::CConsoleSink(const boost::property_tree::ptree& pt)
+{
+    for (auto& prop : pt)
+    {
+        SetProperty(prop.first, prop.second.get_value<std::string>());
+    }
 }
 
 void CConsoleSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> logData)
 {
     for (auto& it : *logData)
     {
-        if (it->command == ELogCommand::eMessage)
+        if (it->command == ELogCommand::eMessage && it->lchannel == LOG_INTERNAL_CHANNEL)
         {
             std::cout << "[" << TS::GetTimestampStr(it->timestamp) << "][" << it->tag << "][" << SeverityToString(it->severity) << "] - " << it->message << std::endl;
         }
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+// File sink
+//////////////////////////////////////////////////////////////////////////
+CFileSink::CFileSink(const boost::property_tree::ptree& pt)
+{
+    for (auto& prop : pt)
+    {
+        SetProperty(prop.first, prop.second.get_value<std::string>());
     }
 }
 
@@ -51,7 +82,6 @@ void CFileSink::SetProperty(const std::string& name, const std::string& value)
     else if (name == "template" && !value.empty())
     {
         m_fileNameTemplate = value;
-        CreateFileName();
     }
 
     else
@@ -85,10 +115,10 @@ void CFileSink::CreateFileName()
 
 void CFileSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> logData)
 {
-    if (!m_fileName.empty())
+    OpenStream();
+    for (auto& it : *logData)
     {
-        OpenStream();
-        for (auto& it : *logData)
+        if (it->lchannel == m_channel)
         {
             switch (it->command)
             {
@@ -96,29 +126,47 @@ void CFileSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>>
                     ofs << "[" << TS::GetTimestampStr(it->timestamp) << "][" << it->tag << "][" << SeverityToString(it->severity) << "] - " << it->message << std::endl;
                     break;
                 case ELogCommand::eStop:
-                    CloseStream();
-                    m_fileName.clear();
+                    if (m_channel != 0)
+                    {
+                        CloseStream();
+                        m_fileName.clear();
+                    }
+                    else
+                    {
+                        ofs << "[" << TS::GetTimestampStr(TS::GetTimestamp()) << "][LOG ][WARN] - Attempt to close default log channel." << std::endl;
+                    }
                     return;
                 case ELogCommand::eChangeFile:
-                    m_prefix = it->message;
-                    m_suffix = it->tag;
-                    CloseStream();
-                    m_fileName.clear();
-                    CreateFileName();
-                    OpenStream();
+                    if (m_channel != 0)
+                    {
+                        m_prefix = it->message;
+                        m_suffix = it->tag;
+                        CloseStream();
+                        m_fileName.clear();
+                        OpenStream();
+                    }
+                    else
+                    {
+                        ofs << "[" << TS::GetTimestampStr(TS::GetTimestamp()) << "][LOG ][WARN] - Attempt to change file name for default log channel." << std::endl;
+                    }
                     break;
                 default:
                     break;
             }
         }
-        CloseStream();
     }
+    CloseStream();
 }
 
 void CFileSink::OpenStream()
 {
     if (!ofs.is_open())
     {
+        if (m_fileName.empty())
+        {
+            CreateFileName();
+        }
+
         ofs.open(m_fileName, std::ios_base::out | std::ios_base::app);
     }
 }

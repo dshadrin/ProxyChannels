@@ -133,23 +133,29 @@ bool CLogger::TimerClockHandler()
 
 void CLogger::LogMultiplexer()
 {
-    std::shared_ptr<SLogPackage> pack(new SLogPackage());
-    pack->timestamp = TS::GetTimestamp();
-    TS::TimestampAdjust(pack->timestamp, -LOG_OUTPUT_DELAY_MS);
-
-    boost::mutex::scoped_lock lock(m_mutex);
-    auto it = m_logRecords.upper_bound(pack);
-
-    std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> outRecords(new std::vector<std::shared_ptr<SLogPackage>>());
-    std::copy(std::begin(m_logRecords), it, std::back_inserter(*outRecords));
-    m_logRecords.erase(std::begin(m_logRecords), it);
-
-    for (auto it : m_sinks)
+    if (m_logRecords.size() > 0)
     {
-        m_tp->SetWorkUnit([it, outRecords]() -> void
+        std::shared_ptr<SLogPackage> pack(new SLogPackage());
+        pack->timestamp = TS::GetTimestamp();
+        TS::TimestampAdjust(pack->timestamp, -LOG_OUTPUT_DELAY_MS);
+
+        boost::mutex::scoped_lock lock(m_mutex);
+        auto it = m_logRecords.upper_bound(pack);
+
+        std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> outRecords(new std::vector<std::shared_ptr<SLogPackage>>());
+        std::copy(std::begin(m_logRecords), it, std::back_inserter(*outRecords));
+        m_logRecords.erase(std::begin(m_logRecords), it);
+
+        if (outRecords->size() > 0)
         {
-            it->Write(outRecords);
-        });
+            for (auto it : m_sinks)
+            {
+                m_tp->SetWorkUnit([it, outRecords]() -> void
+                {
+                    it->Write(outRecords);
+                });
+            }
+        }
     }
 }
 
@@ -163,16 +169,9 @@ void CLogger::CreateSinks(const boost::property_tree::ptree& pt)
             std::string sinkName = sink.second.get<std::string>("name", "");
             if (!sinkName.empty())
             {
-                CSink* ptr = CSink::MakeSink(sinkName);
+                CSink* ptr = CSink::MakeSink(sinkName, sink.second);
                 if (ptr)
                 {
-                    std::string property;
-                    property = sink.second.get<std::string>("severity", "DEBUG");
-                    ptr->SetProperty("severity", property);
-
-                    property = sink.second.get<std::string>("template", "");
-                    ptr->SetProperty("template", property);
-
                     m_sinks.emplace_back(ptr);
                     std::cout << "Created " << sinkName << " sink." << std::endl;
                 }

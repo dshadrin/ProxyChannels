@@ -2,7 +2,8 @@
 #include "actor.h"
 #include "tcpserver.h"
 #include "terminal.h"
-#include "netloggeradapter.h"
+#include "oscar_logger_adapter.h"
+#include "raw_logger_adapter.h"
 
 //////////////////////////////////////////////////////////////////////////
 ENetProtocol ConvertProtocolName2Id(const std::string pName)
@@ -39,13 +40,15 @@ CActor* CActor::MakeActor(boost::property_tree::ptree& pt)
     DEFINE_MODULE_TAG("ACTR");
     CActor* actor = nullptr;
     std::string actorName;
+    std::string actorProto;
     int32_t actorId = -1;
 
     try
     {
         actorName = pt.get<std::string>("name", "UNKNOWN");
+        actorProto = pt.get<std::string>("protocol", NO_PROTO);
         actorId = pt.get<int32_t>("id", -1);
-        LOG_DEBUG << "Begin creating actor " << actorName << "(id = " << actorId << ")";
+        LOG_DEBUG << "Begin creating actor " << actorName << "(protocol = " << actorProto << ", id = " << actorId << ")";
 
         if (actorName == TCP_SERVER)
             actor = new CTcpServerActor(pt);
@@ -54,13 +57,28 @@ CActor* CActor::MakeActor(boost::property_tree::ptree& pt)
             actor = new CTerminal(pt);
 
         else if (actorName == LOGGER_ADAPTOR)
-            actor = new CNetLoggerAdaptor(pt);
+        {
+            if (actorProto == PROTO_OSCAR)
+                actor = new COscarLoggerAdaptor(pt);
 
-        LOG_DEBUG << "Created actor " << actorName << "(id = " << actorId << ")";
+            else if (actorProto == PROTO_RAW)
+                actor = new CRawLoggerAdaptor(pt);
+
+            else
+            {
+                APP_EXCEPTION_ERROR("Unknown protocol.");
+            }
+        }
+        else
+        {
+            APP_EXCEPTION_ERROR("Unknown actor name.");
+        }
+
+        LOG_DEBUG << "Created actor " << actorName << "(protocol = " << actorProto << ", id = " << actorId << ")";
     }
     catch (const std::exception& e)
     {
-        LOG_ERR << "Cannot create actor " << actorName << "(id = " << actorId << ")" << ": " << e.what();
+        LOG_ERR << "Cannot create actor " << actorName << "(protocol = " << actorProto << ", id = " << actorId << ")" << ": " << e.what();
     }
 
     return actor;
