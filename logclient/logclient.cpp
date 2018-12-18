@@ -50,7 +50,7 @@ CLogClient::CLogClient(const boost::property_tree::ptree& pt) :
     else
     {
         m_loggingMode = ELoggingMode::eLoggingToServer;
-        OpenNewLogFile("Log", "rpc");
+        OpenNewLogFile("LogTest", "rpc");
     }
 }
 
@@ -208,11 +208,11 @@ void CLogClient::WriteNextMessage()
                         (std::move(package->tag), std::move(package->severity), std::move(package->message), std::move(package->lchannel), std::move(package->timestamp.tv_sec), std::move(package->timestamp.tv_nsec));
                     break;
                 case ELogCommand::eChangeFile:
-                    m_currentMessage = oscar::ostd::make_flap_package<FlapChannel::Control, oscar::ostd::Snac_NewFile, std::string, std::string, uint8_t, time_t, int64_t>
+                    m_currentMessage = oscar::ostd::make_flap_package<FlapChannel::Control, oscar::ostd::Snac_NewFile, std::string, std::string, int8_t, time_t, int64_t>
                         (std::move(package->message), std::move(package->tag), std::move(package->lchannel), std::move(package->timestamp.tv_sec), std::move(package->timestamp.tv_nsec));
                     break;
                 case ELogCommand::eStop:
-                    m_currentMessage = oscar::ostd::make_flap_package<FlapChannel::Control, oscar::ostd::Snac_Stop, uint8_t, time_t, int64_t>
+                    m_currentMessage = oscar::ostd::make_flap_package<FlapChannel::Control, oscar::ostd::Snac_Stop, int8_t, time_t, int64_t>
                         (std::move(package->lchannel), std::move(package->timestamp.tv_sec), std::move(package->timestamp.tv_nsec));
                     break;
                 default:
@@ -231,6 +231,8 @@ void CLogClient::CloseLogFile()
 {
     std::shared_ptr<SLogPackage> logPackage(new SLogPackage());
     logPackage->command = ELogCommand::eStop;
+    logPackage->timestamp = TS::GetTimestamp();
+    logPackage->lchannel = CLogMessageBuilder::GetLoggingChannel();
     Push(logPackage);
 }
 
@@ -238,8 +240,10 @@ void CLogClient::OpenNewLogFile(std::string namePrefix, std::string nameSuffix)
 {
     std::shared_ptr<SLogPackage> logPackage(new SLogPackage());
     logPackage->command = ELogCommand::eChangeFile;
+    logPackage->lchannel = CLogMessageBuilder::GetLoggingChannel();
     logPackage->message = namePrefix;
     logPackage->tag = nameSuffix;
+    logPackage->timestamp = TS::GetTimestamp();
     Push(logPackage);
 }
 

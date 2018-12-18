@@ -56,6 +56,11 @@ void CLogMessageBuilder::SetLoggingChannel(int8_t ch)
     s_logChannel = ch;
 }
 
+int8_t CLogMessageBuilder::GetLoggingChannel()
+{
+    return s_logChannel;
+}
+
 //////////////////////////////////////////////////////////////////////////
 ESeverity StringToSeverity(const std::string& sSev)
 {

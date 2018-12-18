@@ -102,6 +102,7 @@ public:
 
     ~CLogMessageBuilder();
     static void SetLoggingChannel(int8_t ch);
+    static int8_t GetLoggingChannel();
 
     template<typename _Type>
     CLogMessageBuilder& operator<<(const _Type& data)

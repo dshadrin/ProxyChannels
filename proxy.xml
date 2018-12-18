@@ -34,6 +34,14 @@
             <prefix>SP01</prefix>
             <suffix>raw</suffix>
         </sink>
+        <sink>
+            <channel>3</channel>
+            <name>FILE</name>
+            <template>%Y%m%d_%H%M%S_2.log</template>
+            <severity>DEBUG</severity>
+            <prefix>Test</prefix>
+            <suffix></suffix>
+          </sink>
       </sinks>
     <client>
       <host>localhost</host>

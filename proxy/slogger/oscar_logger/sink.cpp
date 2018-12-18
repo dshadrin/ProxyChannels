@@ -144,6 +144,7 @@ void CFileSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>>
                         CloseStream();
                         m_fileName.clear();
                         OpenStream();
+                        ofs << "[" << TS::GetTimestampStr(TS::GetTimestamp()) << "][LOG ][WARN] - Open stream " << m_fileName << " on channel " << m_channel << std::endl;
                     }
                     else
                     {

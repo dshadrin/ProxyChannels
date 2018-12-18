@@ -148,12 +148,18 @@ void CLogger::LogMultiplexer()
 
         if (outRecords->size() > 0)
         {
-            for (auto it : m_sinks)
+            for (auto& it : m_sinks)
             {
-                m_tp->SetWorkUnit([it, outRecords]() -> void
+                if (std::find_if(std::begin(*outRecords), std::end(*outRecords), [&it](const std::shared_ptr<SLogPackage>& item) -> bool
                 {
-                    it->Write(outRecords);
-                });
+                    return item->lchannel == it->Channel();
+                }) != std::end(*outRecords))
+                {
+                    m_tp->SetWorkUnit([it, outRecords]() -> void
+                    {
+                        it->Write(outRecords);
+                    });
+                }
             }
         }
     }

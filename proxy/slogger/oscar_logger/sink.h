@@ -24,6 +24,7 @@ public:
 
     virtual void SetProperty(const std::string& name, const std::string& value);
     virtual void Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> logData) = 0;
+    int8_t Channel() const { return m_channel; }
 
 protected:
     ESeverity m_severity;
