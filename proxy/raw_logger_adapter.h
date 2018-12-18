@@ -15,12 +15,9 @@ public:
     void DoLog(PMessage msg);
 
 private:
-    std::string m_tag;
-    std::shared_ptr<SLogPackage> m_package;
-
     ENetProtocol m_protocol;
-    ESeverity m_severity;
-    int8_t m_logChannel;
+    bool m_filterESC;
+    SLogPackage m_package;
 
 private:
     struct SWork

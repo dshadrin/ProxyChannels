@@ -57,7 +57,7 @@
     <actor>
       <id>6</id>
       <name>UART-CLIENT</name>
-      <port>1</port>
+      <port>4</port>
       <port_name>
         <windows>COM</windows>
         <!-- for linux can be a several names - /dev/tty, /dev/ttyS, etc - for detail see docs by you linux system -->
@@ -98,6 +98,7 @@
       <channel>1</channel>
       <!-- tag defines name of data source (module name in logs) -->
       <tag>SP01</tag>
+      <filter_esc>true</filter_esc>
     </actor>
   </actors>
   <not-used>

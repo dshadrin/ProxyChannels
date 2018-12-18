@@ -8,15 +8,13 @@ extern void DirectSendToLogger(std::shared_ptr<SLogPackage> logPackage);
 CRawLoggerAdaptor::CRawLoggerAdaptor(boost::property_tree::ptree& pt) :
     CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
     m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", "RAW"))),
-    m_severity(StringToSeverity(pt.get<std::string>("severity", "DEBUG"))),
-    m_logChannel(pt.get<int8_t>("channel", LOG_UNKNOWN_CHANNEL)),
-    m_tag(pt.get<std::string>("tag", "")),
-    m_package(new SLogPackage)
+    m_filterESC(pt.get<bool>("filter_esc", false)),
+    m_package{ "", 
+               pt.get<std::string>("tag", ""),
+               {0, 0}, ELogCommand::eMessage,
+               (uint8_t)StringToSeverity(pt.get<std::string>("severity", "DEBUG")),
+               pt.get<int8_t>("channel", LOG_UNKNOWN_CHANNEL) }
 {
-    m_package->tag = m_tag;
-    m_package->lchannel = m_logChannel;
-    m_package->command = ELogCommand::eMessage;
-    m_package->severity = (uint8_t)m_severity;
     m_sigOutputMessage.connect(std::bind(&CRawLoggerAdaptor::DoLog, this, std::placeholders::_1));
 }
 
@@ -44,16 +42,21 @@ void CRawLoggerAdaptor::DoLog(PMessage msg)
 
         auto logString = [this, &pos]() -> void
         {
-            m_package->message = m_work.buffer.substr(0, pos + 1);
+            std::shared_ptr<SLogPackage> logPackage(new SLogPackage(m_package));
+            logPackage->message = m_work.buffer.substr(0, pos + 1);
             m_work.buffer.erase(0, pos + 1);
-            while (m_package->message.length() > 0 && (*m_package->message.rbegin() == '\r' || *m_package->message.rbegin() == '\n'))
+            boost::algorithm::trim_right(logPackage->message);
+            if (!logPackage->message.empty())
             {
-                m_package->message.pop_back();
-            }
-            if (!m_package->message.empty())
-            {
-                m_package->timestamp = m_work.timestamp;
-                DirectSendToLogger(m_package);
+                if (m_filterESC)
+                {
+                    boost::algorithm::erase_all_regex(logPackage->message, boost::regex{ "(\x1B\\[([0-9]+;)*[0-9]*[m|h]{1})" });
+                }
+                if (!logPackage->message.empty())
+                {
+                    logPackage->timestamp = m_work.timestamp;
+                    DirectSendToLogger(logPackage);
+                }
             }
         };
 

@@ -40,6 +40,7 @@
 #include <boost/chrono.hpp>
 #include <boost/stacktrace.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string_regex.hpp>
 #include <boost/thread.hpp>
 #include <boost/signals2.hpp>
 #include <boost/function.hpp>
