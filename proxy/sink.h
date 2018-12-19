@@ -5,6 +5,7 @@
 
 #pragma once
 #include "thread_pool.h"
+#include "utils/logbuilder.h"
 #include <set>
 #include <fstream>
 #include <boost/noncopyable.hpp>
@@ -26,9 +27,18 @@ public:
     virtual void Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> logData) = 0;
     int8_t Channel() const { return m_channel; }
 
+    static bool WaitJobFlag(uint32_t ms);
+    uint32_t JobFlag() const { return 1 << m_channel; }
+    void SetFlag();
+    void ReleaseFlag();
+
 protected:
     ESeverity m_severity;
     int8_t m_channel;
+    DECLARE_MODULE_TAG;
+    static boost::condition_variable m_jobCond;
+    static boost::mutex m_jobMutex;
+    static uint32_t m_jobFlag;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -58,9 +68,10 @@ private:
     void CloseStream();
 
 private:
-    std::ofstream ofs;
+    std::ofstream m_ofs;
     std::string m_fileNameTemplate;
     std::string m_prefix;
     std::string m_suffix;
     std::string m_fileName;
+    bool m_isOpenByDemand;
 };

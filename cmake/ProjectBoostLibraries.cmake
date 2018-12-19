@@ -15,13 +15,8 @@ set(BOOST_LIB_LIST
   system
   filesystem
   thread
+  regex
 )
-
-if(USE_BOOST_LOGGER)
-  list(APPEND BOOST_LIB_LIST log)
-else() #if(USE_SIMPLE_LOGGER)
-  list(APPEND BOOST_LIB_LIST regex)
-endif()
 
 find_package(Boost COMPONENTS ${BOOST_LIB_LIST} REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})

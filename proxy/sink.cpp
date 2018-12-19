@@ -12,6 +12,11 @@
 //////////////////////////////////////////////////////////////////////////
 // Factory method
 //////////////////////////////////////////////////////////////////////////
+IMPLEMENT_MODULE_TAG(CSink, "SINK");
+boost::condition_variable CSink::m_jobCond;
+boost::mutex CSink::m_jobMutex;
+uint32_t CSink::m_jobFlag = 0;
+
 CSink* CSink::MakeSink(const std::string& name, const boost::property_tree::ptree& pt)
 {
     std::string sinkName = boost::algorithm::to_upper_copy(name);
@@ -36,6 +41,32 @@ void CSink::SetProperty(const std::string& name, const std::string& value)
 
     else if (name == "channel")
         m_channel = std::stoi(value);
+}
+
+bool CSink::WaitJobFlag(uint32_t ms)
+{
+    boost::chrono::high_resolution_clock::time_point tmEnd = boost::chrono::high_resolution_clock::now() + boost::chrono::microseconds(ms);
+    boost::cv_status cv = boost::cv_status::no_timeout;
+    boost::mutex::scoped_lock jobLock(m_jobMutex);
+    while (m_jobFlag != 0 || cv == boost::cv_status::no_timeout)
+    {
+        cv = m_jobCond.wait_until(jobLock, tmEnd);
+    }
+
+    return m_jobFlag == 0;
+}
+
+void CSink::SetFlag()
+{
+    boost::mutex::scoped_lock jobLock(m_jobMutex);
+    m_jobFlag |= JobFlag();
+}
+
+void CSink::ReleaseFlag()
+{
+    boost::mutex::scoped_lock jobLock(m_jobMutex);
+    m_jobFlag &= ~JobFlag();
+    m_jobCond.notify_all();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -63,11 +94,18 @@ void CConsoleSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage
 //////////////////////////////////////////////////////////////////////////
 // File sink
 //////////////////////////////////////////////////////////////////////////
-CFileSink::CFileSink(const boost::property_tree::ptree& pt)
+CFileSink::CFileSink(const boost::property_tree::ptree& pt) :
+    m_isOpenByDemand(false)
 {
     for (auto& prop : pt)
     {
         SetProperty(prop.first, prop.second.get_value<std::string>());
+    }
+
+    if (m_channel == LOG_INTERNAL_CHANNEL || !m_isOpenByDemand)
+    {
+        CreateFileName();
+        std::cout << "Created filename for channel " << (int)m_channel << " : " << m_fileName << std::endl;
     }
 }
 
@@ -80,9 +118,10 @@ void CFileSink::SetProperty(const std::string& name, const std::string& value)
         m_suffix = value;
 
     else if (name == "template" && !value.empty())
-    {
         m_fileNameTemplate = value;
-    }
+
+    else if (name == "open_by_demand" && boost::algorithm::to_lower_copy(value) == "true")
+        m_isOpenByDemand = true;
 
     else
         CSink::SetProperty(name, value);
@@ -104,6 +143,8 @@ void CFileSink::CreateFileName()
         fName.insert(0, 1, '_');
         fName.insert(0, m_prefix);
     }
+    fName.append(1, '_');
+    fName.append(std::to_string((int)m_channel));
     if (!m_suffix.empty())
     {
         fName.append(1, '_');
@@ -115,6 +156,15 @@ void CFileSink::CreateFileName()
 
 void CFileSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> logData)
 {
+    auto writeMessage = [this](const std::shared_ptr<SLogPackage>& data) -> void
+    {
+        if (m_ofs.is_open())
+        {
+            m_ofs << "[" << TS::GetTimestampStr(data->timestamp) << "][" << data->tag << "][" << SeverityToString(data->severity) << "] - " << data->message << std::endl;
+        }
+    };
+
+    bool isBreak = false;
     OpenStream();
     for (auto& it : *logData)
     {
@@ -123,60 +173,58 @@ void CFileSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>>
             switch (it->command)
             {
                 case ELogCommand::eMessage:
-                    ofs << "[" << TS::GetTimestampStr(it->timestamp) << "][" << it->tag << "][" << SeverityToString(it->severity) << "] - " << it->message << std::endl;
+                    writeMessage(it);
                     break;
                 case ELogCommand::eStop:
-                    if (m_channel != 0)
+                    if (m_channel > LOG_INTERNAL_CHANNEL)
                     {
-                        CloseStream();
                         m_fileName.clear();
+                        isBreak = true;
                     }
                     else
                     {
-                        ofs << "[" << TS::GetTimestampStr(TS::GetTimestamp()) << "][LOG ][WARN] - Attempt to close default log channel." << std::endl;
+                        LOG_WARN << "Attempt to close non applicable log channel " << (int)m_channel;
                     }
-                    return;
+                    break;
                 case ELogCommand::eChangeFile:
-                    if (m_channel != 0)
+                    if (m_channel > LOG_INTERNAL_CHANNEL)
                     {
                         m_prefix = it->message;
                         m_suffix = it->tag;
                         CloseStream();
-                        m_fileName.clear();
+                        CreateFileName();
+                        LOG_DEBUG << "Created filename for channel " << (int)m_channel << " : " << m_fileName;
                         OpenStream();
-                        ofs << "[" << TS::GetTimestampStr(TS::GetTimestamp()) << "][LOG ][WARN] - Open stream " << m_fileName << " on channel " << m_channel << std::endl;
                     }
                     else
                     {
-                        ofs << "[" << TS::GetTimestampStr(TS::GetTimestamp()) << "][LOG ][WARN] - Attempt to change file name for default log channel." << std::endl;
+                        LOG_WARN << "Attempt to change file name for non applicable log channel " << (int)m_channel;
                     }
                     break;
                 default:
                     break;
             }
+            if (isBreak)
+                break;
         }
     }
     CloseStream();
+    ReleaseFlag();
 }
 
 void CFileSink::OpenStream()
 {
-    if (!ofs.is_open())
+    if (!m_ofs.is_open() && !m_fileName.empty())
     {
-        if (m_fileName.empty())
-        {
-            CreateFileName();
-        }
-
-        ofs.open(m_fileName, std::ios_base::out | std::ios_base::app);
+        m_ofs.open(m_fileName, std::ios_base::out | std::ios_base::app);
     }
 }
 
 void CFileSink::CloseStream()
 {
-    if (ofs.is_open())
+    if (m_ofs.is_open())
     {
-        ofs.flush();
-        ofs.close();
+        m_ofs.flush();
+        m_ofs.close();
     }
 }

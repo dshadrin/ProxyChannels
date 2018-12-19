@@ -5,19 +5,6 @@
 #include "channel.h"
 
 //////////////////////////////////////////////////////////////////////////
-#ifdef USE_SIMPLE_LOGGER
-#include <iostream>
-void DirectSendToLogger(std::shared_ptr<SLogPackage> logPackage)
-{
-    static boost::mutex mtx;
-    boost::mutex::scoped_lock lock(mtx);
-    std::cout << "[" << CLogMessageBuilder::GetTimestampStr(logPackage->timestamp) << "][" << logPackage->tag << "][" << SeverityToString(logPackage->severity) << "] - " << logPackage->message << std::endl;
-}
-size_t G_TagSize = 4;
-size_t G_MaxMessageSize = 512;
-#endif
-
-//////////////////////////////////////////////////////////////////////////
 boost::mutex CManager::sManagerMtx;
 std::unique_ptr<CManager> CManager::sManager;
 IMPLEMENT_MODULE_TAG(CManager, "MGR");
@@ -52,9 +39,7 @@ void CManager::init()
             sManager.reset(new CManager());
         }
 
-#ifndef USE_SIMPLE_LOGGER
         CLogger::Get()->Start();
-#endif
 
         LOG_INFO << "Manager started";
         sManager->m_tp.SetWorkUnit(std::bind(&CManager::AsioServiceWork, sManager.get()));
@@ -92,9 +77,7 @@ void CManager::reset()
         }
 
         LOG_INFO << "Manager finished";
-#ifndef USE_SIMPLE_LOGGER
         CLogger::Get()->Stop();
-#endif
         sManager.reset();
     }
 }

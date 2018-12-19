@@ -1,11 +1,8 @@
 #pragma once
 
 #include "thread_pool.h"
-#include <boost/asio/io_service.hpp>
-
-#ifndef USE_SIMPLE_LOGGER
 #include "logger.h"
-#endif
+#include <boost/asio/io_service.hpp>
 
 //////////////////////////////////////////////////////////////////////////
 class CActor;

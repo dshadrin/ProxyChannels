@@ -8,8 +8,11 @@
 #include <boost/algorithm/string.hpp>
 
 //////////////////////////////////////////////////////////////////////////
-#define LOG_UNKNOWN_CHANNEL -1
-#define LOG_INTERNAL_CHANNEL 0
+#define LOG_UNKNOWN_CHANNEL        -1
+#define LOG_INTERNAL_CHANNEL        0
+#define LOG_UART_FILTERED_CHANNEL   1
+#define LOG_UART_RAW_CHANNEL        2
+#define LOG_CLIENT_CHANNEL          3
 
 //////////////////////////////////////////////////////////////////////////
 enum class ESeverity : uint8_t

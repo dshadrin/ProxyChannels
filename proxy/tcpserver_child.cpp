@@ -32,7 +32,7 @@ CTcpServerChild::CTcpServerChild(boost::asio::io_service& ioservice,
         GetBuffer().resize(oscar::FLAP_HEADER_SIZE);
         boost::asio::async_read(*m_socket, boost::asio::buffer(GetBuffer(), oscar::FLAP_HEADER_SIZE), std::bind(&CTcpServerChild::OscarHeaderReadHandler, this, std::placeholders::_1, std::placeholders::_2));
         break;
-    case ENetProtocol::eRaw:
+    case ENetProtocol::eStream:
     default:
         m_socket->async_read_some(boost::asio::buffer(GetBuffer()), std::bind(&CTcpServerChild::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
     }

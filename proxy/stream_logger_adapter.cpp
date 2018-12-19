@@ -1,13 +1,13 @@
 #include "stdinc.h"
-#include "raw_logger_adapter.h"
+#include "stream_logger_adapter.h"
 #include "oscar/flap_parser.h"
 #include <iostream>
 
 extern void DirectSendToLogger(std::shared_ptr<SLogPackage> logPackage);
 
-CRawLoggerAdaptor::CRawLoggerAdaptor(boost::property_tree::ptree& pt) :
+CStreamLoggerAdaptor::CStreamLoggerAdaptor(boost::property_tree::ptree& pt) :
     CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
-    m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", "RAW"))),
+    m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", PROTO_STREAM))),
     m_filterESC(pt.get<bool>("filter_esc", false)),
     m_package{ "", 
                pt.get<std::string>("tag", ""),
@@ -15,27 +15,27 @@ CRawLoggerAdaptor::CRawLoggerAdaptor(boost::property_tree::ptree& pt) :
                (uint8_t)StringToSeverity(pt.get<std::string>("severity", "DEBUG")),
                pt.get<int8_t>("channel", LOG_UNKNOWN_CHANNEL) }
 {
-    m_sigOutputMessage.connect(std::bind(&CRawLoggerAdaptor::DoLog, this, std::placeholders::_1));
+    m_sigOutputMessage.connect(std::bind(&CStreamLoggerAdaptor::DoLog, this, std::placeholders::_1));
 }
 
-void CRawLoggerAdaptor::Start()
+void CStreamLoggerAdaptor::Start()
 {
 
 }
 
-void CRawLoggerAdaptor::Stop()
+void CStreamLoggerAdaptor::Stop()
 {
     m_sigOutputMessage.disconnect_all_slots();
 }
 
-std::string CRawLoggerAdaptor::GetName() const
+std::string CStreamLoggerAdaptor::GetName() const
 {
     return LOGGER_ADAPTOR;
 }
 
-void CRawLoggerAdaptor::DoLog(PMessage msg)
+void CStreamLoggerAdaptor::DoLog(PMessage msg)
 {
-    if (m_protocol == ENetProtocol::eRaw)
+    if (m_protocol == ENetProtocol::eStream)
     {
         timespec timestamp = TS::GetTimestamp();
         std::string::size_type pos = 0;
@@ -50,7 +50,7 @@ void CRawLoggerAdaptor::DoLog(PMessage msg)
             {
                 if (m_filterESC)
                 {
-                    boost::algorithm::erase_all_regex(logPackage->message, boost::regex{ "(\x1B\\[([0-9]+;)*[0-9]*[m|h]{1})" });
+                    boost::algorithm::erase_all_regex(logPackage->message, boost::regex{ "(\x1B\\[([0-9]+;)*[0-9]*[m|h|l]{1})" });
                 }
                 if (!logPackage->message.empty())
                 {

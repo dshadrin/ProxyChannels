@@ -6,7 +6,7 @@ file( GLOB monitor_SRC *.cpp )
 file( GLOB monitor_INC *.h* )
 
 if(UNIX)
-  if(NOT STATIC_COMMUNICATOR)
+  if(NOT STATIC_PROXY)
     # use, i.e. don't skip the full RPATH for the build tree
     SET(CMAKE_SKIP_BUILD_RPATH FALSE)
 

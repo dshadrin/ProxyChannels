@@ -17,7 +17,8 @@ void DirectSendToLogger(std::shared_ptr<SLogPackage> logPackage)
 }
 
 //////////////////////////////////////////////////////////////////////////
-#define LOG_OUTPUT_DELAY_MS 1500
+#define LOG_OUTPUT_DELAY_MS 2500
+#define LOG_OUTPUT_TIMER_PERIOD 1500
 IMPLEMENT_MODULE_TAG(CLogger, "LOG");
 //////////////////////////////////////////////////////////////////////////
 std::unique_ptr<CLogger> CLogger::s_Logger;
@@ -74,7 +75,7 @@ void CLogger::Start()
     assert(m_tp != nullptr);
     m_continueTimer = true;
     m_tmJob.tmPoint = boost::chrono::high_resolution_clock::now() + boost::chrono::milliseconds(1500);
-    m_tmJob.tmPeriod = boost::chrono::milliseconds(1500);
+    m_tmJob.tmPeriod = boost::chrono::milliseconds(LOG_OUTPUT_TIMER_PERIOD);
     m_tmJob.callback = std::bind(&CLogger::TimerClockHandler, this);
     m_tp->SetTimer(m_tmJob);
     LOG_WARN << "Logger was started";
@@ -93,7 +94,7 @@ void CLogger::WaitEmptyQueue()
     while (count)
     {
         {
-            boost::mutex::scoped_lock lock(m_mutex);
+            boost::mutex::scoped_lock lock(m_queueMutex);
             count = m_logRecords.size();
         }
         if (count)
@@ -121,8 +122,15 @@ CLogger* CLogger::Get()
 
 void CLogger::Push(std::shared_ptr<SLogPackage> logPackage)
 {
-    boost::mutex::scoped_lock lock(m_mutex);
-    m_logRecords.insert(logPackage);
+    if (logPackage->lchannel != LOG_UNKNOWN_CHANNEL)
+    {
+        boost::mutex::scoped_lock lock(m_queueMutex);
+        m_logRecords.insert(logPackage);
+    }
+    else
+    {
+        LOG_WARN << "Skip log message with unknown channel";
+    }
 }
 
 bool CLogger::TimerClockHandler()
@@ -133,13 +141,13 @@ bool CLogger::TimerClockHandler()
 
 void CLogger::LogMultiplexer()
 {
-    if (m_logRecords.size() > 0)
+    if (CSink::WaitJobFlag(1000) && m_logRecords.size() > 0)
     {
         std::shared_ptr<SLogPackage> pack(new SLogPackage());
         pack->timestamp = TS::GetTimestamp();
         TS::TimestampAdjust(pack->timestamp, -LOG_OUTPUT_DELAY_MS);
 
-        boost::mutex::scoped_lock lock(m_mutex);
+        boost::mutex::scoped_lock lock(m_queueMutex);
         auto it = m_logRecords.upper_bound(pack);
 
         std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> outRecords(new std::vector<std::shared_ptr<SLogPackage>>());
@@ -155,6 +163,7 @@ void CLogger::LogMultiplexer()
                     return item->lchannel == it->Channel();
                 }) != std::end(*outRecords))
                 {
+                    it->SetFlag();
                     m_tp->SetWorkUnit([it, outRecords]() -> void
                     {
                         it->Write(outRecords);

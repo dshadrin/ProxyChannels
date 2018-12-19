@@ -3,33 +3,37 @@
 #include "tcpserver.h"
 #include "terminal.h"
 #include "oscar_logger_adapter.h"
-#include "raw_logger_adapter.h"
+#include "stream_logger_adapter.h"
 
 //////////////////////////////////////////////////////////////////////////
 ENetProtocol ConvertProtocolName2Id(const std::string pName)
 {
     std::string name = boost::algorithm::to_upper_copy(pName);
 
-    if (name == "TELNET")
-        return ENetProtocol::eTelnet;
+    if (name == PROTO_STREAM)
+        return ENetProtocol::eStream;
 
-    else if (name == "OSCAR")
+    else if (name == PROTO_OSCAR)
         return ENetProtocol::eOscar;
 
-    return ENetProtocol::eRaw;
+    else if (name == PROTO_TELNET)
+        return ENetProtocol::eTelnet;
+
+    APP_EXCEPTION_ERROR(GMSG << "Unknown protocol name: " << pName);
 }
 
 std::string ConvertId2ProtocolName(ENetProtocol pId)
 {
     switch (pId)
     {
-    case ENetProtocol::eTelnet:
-        return "TELNET";
     case ENetProtocol::eOscar:
-        return "OSCAR";
-    case ENetProtocol::eRaw:
+        return PROTO_OSCAR;
+    case ENetProtocol::eStream:
+        return PROTO_STREAM;
+    case ENetProtocol::eTelnet:
+        return PROTO_TELNET;
     default:
-        return "RAW";
+        APP_EXCEPTION_ERROR(GMSG << "Unknown protocol id: " << (int)pId);
     }
 }
 
@@ -64,17 +68,17 @@ CActor* CActor::MakeActor(boost::property_tree::ptree& pt)
             if (actorProto == PROTO_OSCAR)
                 actor = new COscarLoggerAdaptor(pt);
 
-            else if (actorProto == PROTO_RAW)
-                actor = new CRawLoggerAdaptor(pt);
+            else if (actorProto == PROTO_STREAM)
+                actor = new CStreamLoggerAdaptor(pt);
 
             else
             {
-                APP_EXCEPTION_ERROR("Unknown protocol.");
+                APP_EXCEPTION_ERROR(GMSG << "Unknown adaptor protocol: " << actorProto);
             }
         }
         else
         {
-            APP_EXCEPTION_ERROR("Unknown actor name.");
+            APP_EXCEPTION_ERROR(GMSG << "Unknown actor name: " << actorName);
         }
 
         LOG_DEBUG << "Created actor " << actorName << "(protocol = " << actorProto << ", id = " << actorId << ")";

@@ -13,7 +13,7 @@
         <sink>
             <channel>0</channel>
             <name>FILE</name>
-            <template>%Y%m%d_%H%M%S_0.log</template>
+            <template>%Y%m%d_%H%M%S.log</template>
             <severity>DEBUG</severity>
             <prefix>Monitor</prefix>
             <suffix></suffix>
@@ -21,23 +21,24 @@
         <sink>
             <channel>1</channel>
             <name>FILE</name>
-            <template>%Y%m%d_%H%M%S_1.log</template>
+            <template>%Y%m%d_%H%M%S.log</template>
             <severity>DEBUG</severity>
             <prefix>SP01</prefix>
-            <suffix>uart</suffix>
+            <suffix>filtered</suffix>
         </sink>
         <sink>
             <channel>2</channel>
             <name>FILE</name>
-            <template>%Y%m%d_%H%M%S_2.log</template>
+            <template>%Y%m%d_%H%M%S.log</template>
             <severity>DEBUG</severity>
             <prefix>SP01</prefix>
-            <suffix>raw</suffix>
+            <suffix>original</suffix>
         </sink>
         <sink>
             <channel>3</channel>
             <name>FILE</name>
-            <template>%Y%m%d_%H%M%S_2.log</template>
+            <open_by_demand>true</open_by_demand>
+            <template>%Y%m%d_%H%M%S.log</template>
             <severity>DEBUG</severity>
             <prefix>Test</prefix>
             <suffix></suffix>
@@ -73,7 +74,7 @@
     <actor>
       <id>6</id>
       <name>UART-CLIENT</name>
-      <port>4</port>
+      <port>1</port>
       <port_name>
         <windows>COM</windows>
         <!-- for linux can be a several names - /dev/tty, /dev/ttyS, etc - for detail see docs by you linux system -->
@@ -81,7 +82,7 @@
         <linux>/dev/ttyS</linux>
       </port_name>
       <input_buffer_size>1024</input_buffer_size>
-      <protocol>RAW</protocol>
+      <protocol>STREAM</protocol>
       <option>
         <!-- baud_rate - 921600, 460800, 230400, 115200, 57600, 38400, 19200, 14400, 9600, 7200, 4800, 2400, 1800, 1200, 600, 300 -->
         <!-- by default is 115200 -->
@@ -109,7 +110,7 @@
     <actor>
       <id>8</id>
       <name>LOGGER-ADAPTOR</name>
-      <protocol>RAW</protocol>
+      <protocol>STREAM</protocol>
       <severity>INFO</severity>
       <channel>1</channel>
       <!-- tag defines name of data source (module name in logs) -->
@@ -119,37 +120,24 @@
     <actor>
       <id>9</id>
       <name>LOGGER-ADAPTOR</name>
-      <protocol>RAW</protocol>
+      <protocol>STREAM</protocol>
       <severity>INFO</severity>
       <channel>2</channel>
       <!-- tag defines name of data source (module name in logs) -->
       <tag>SP01</tag>
       <filter_esc>false</filter_esc>
     </actor>
+      <actor>
+          <id>10</id>
+          <name>LOGGER-ADAPTOR</name>
+          <protocol>STREAM</protocol>
+          <severity>INFO</severity>
+          <channel>3</channel>
+          <!-- tag defines name of data source (module name in logs) -->
+          <tag>SP01</tag>
+          <filter_esc>true</filter_esc>
+      </actor>
   </actors>
-  <not-used>
-    <actor>
-      <id>2</id>
-      <name>TCP-SERVER</name>
-      <port>2005</port>
-      <input_buffer_size>4096</input_buffer_size>
-      <protocol>TELNET</protocol>
-    </actor>
-    <actor>
-      <id>3</id>
-      <name>TCP-SERVER</name>
-      <port>2006</port>
-      <input_buffer_size>4096</input_buffer_size>
-      <protocol>TELNET</protocol>
-    </actor>
-    <actor>
-      <id>4</id>
-      <name>TCP-SERVER</name>
-      <port>2007</port>
-      <input_buffer_size>4096</input_buffer_size>
-      <protocol>TELNET</protocol>
-    </actor>
-  </not-used>
   <channels>
     <channel>
       <!-- id - unique number for channel -->
@@ -187,5 +175,10 @@
       <source>6</source>
       <destination>9</destination>
     </channel>
+      <channel>
+          <id>6</id>
+          <source>6</source>
+          <destination>10</destination>
+      </channel>
   </channels>
 </proxy>
