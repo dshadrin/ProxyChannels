@@ -17,7 +17,8 @@ void DirectSendToLogger(std::shared_ptr<SLogPackage> logPackage)
 }
 
 //////////////////////////////////////////////////////////////////////////
-#define LOG_OUTPUT_DELAY_MS 1500
+#define LOG_OUTPUT_DELAY_MS 2500
+#define LOG_OUTPUT_TIMER_PERIOD 1500
 IMPLEMENT_MODULE_TAG(CLogger, "LOG");
 //////////////////////////////////////////////////////////////////////////
 std::unique_ptr<CLogger> CLogger::s_Logger;
@@ -74,7 +75,7 @@ void CLogger::Start()
     assert(m_tp != nullptr);
     m_continueTimer = true;
     m_tmJob.tmPoint = boost::chrono::high_resolution_clock::now() + boost::chrono::milliseconds(1500);
-    m_tmJob.tmPeriod = boost::chrono::milliseconds(1500);
+    m_tmJob.tmPeriod = boost::chrono::milliseconds(LOG_OUTPUT_TIMER_PERIOD);
     m_tmJob.callback = std::bind(&CLogger::TimerClockHandler, this);
     m_tp->SetTimer(m_tmJob);
     LOG_WARN << "Logger was started";
