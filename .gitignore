@@ -1,6 +1,5 @@
 build/
-build-lnx/
-build-mingw/
+build*/
 dist/
 .idea/
 cmake-build-*/

@@ -2,11 +2,11 @@
 #include "actor.h"
 
 //////////////////////////////////////////////////////////////////////////
-class CRawLoggerAdaptor : public CActor
+class CStreamLoggerAdaptor : public CActor
 {
 public:
-    CRawLoggerAdaptor(boost::property_tree::ptree& pt);
-    virtual ~CRawLoggerAdaptor() = default;
+    CStreamLoggerAdaptor(boost::property_tree::ptree& pt);
+    virtual ~CStreamLoggerAdaptor() = default;
 
     void Start() override;
     void Stop() override;

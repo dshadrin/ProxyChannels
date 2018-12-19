@@ -5,6 +5,7 @@
 
 #pragma once
 #include "thread_pool.h"
+#include "utils/logbuilder.h"
 #include <set>
 #include <fstream>
 #include <boost/noncopyable.hpp>
@@ -29,6 +30,7 @@ public:
 protected:
     ESeverity m_severity;
     int8_t m_channel;
+    DECLARE_MODULE_TAG;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -58,9 +60,10 @@ private:
     void CloseStream();
 
 private:
-    std::ofstream ofs;
+    std::ofstream m_ofs;
     std::string m_fileNameTemplate;
     std::string m_prefix;
     std::string m_suffix;
     std::string m_fileName;
+    bool m_isOpenByDemand;
 };

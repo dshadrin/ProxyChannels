@@ -8,17 +8,17 @@
 
 #define NO_PROTO "NO_PROTO"
 #define PROTO_OSCAR "OSCAR"
+#define PROTO_STREAM "STREAM"
 #define PROTO_TELNET "TELNET"
-#define PROTO_RAW "RAW"
 
 
 //////////////////////////////////////////////////////////////////////////
 enum class ENetProtocol : uint8_t
 {
-    eTelnet,
     eOscar,
     // insert new protocols before this line
-    eRaw
+    eStream,
+    eTelnet
 };
 
 ENetProtocol ConvertProtocolName2Id(const std::string pName);

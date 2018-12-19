@@ -1,4 +1,5 @@
 #include "logclient.h"
+#include "utils/strace_exception.h"
 #include "utils/timestamp.h"
 #include <iostream>
 #include <boost/property_tree/xml_parser.hpp>
@@ -46,11 +47,15 @@ CLogClient::CLogClient(const boost::property_tree::ptree& pt) :
     if (!isConnected)
     {
         Stop();
+        APP_EXCEPTION_ERROR(GMSG << "Cannot connect to " << m_host << ":" << m_port);
     }
     else
     {
         m_loggingMode = ELoggingMode::eLoggingToServer;
-        OpenNewLogFile("LogTest", "rpc");
+        if (CLogMessageBuilder::GetLoggingChannel() != LOG_INTERNAL_CHANNEL)
+        {
+            OpenNewLogFile("LogTest", "rpc");
+        }
     }
 }
 

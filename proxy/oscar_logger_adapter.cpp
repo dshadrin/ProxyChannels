@@ -7,7 +7,7 @@ extern void DirectSendToLogger(std::shared_ptr<SLogPackage> logPackage);
 
 COscarLoggerAdaptor::COscarLoggerAdaptor(boost::property_tree::ptree& pt) :
     CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
-    m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", "RAW")))
+    m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", PROTO_STREAM)))
 {
     m_sigOutputMessage.connect(std::bind(&COscarLoggerAdaptor::DoLog, this, std::placeholders::_1));
 }
@@ -47,7 +47,6 @@ void COscarLoggerAdaptor::DoLog(PMessage msg)
                 logPackage->command = ELogCommand::eMessage;
 
                 DirectSendToLogger(logPackage);
-#ifdef USE_OSCAR_LOGGER
             }
                 break;
             case FlapChannel::Control:
@@ -73,7 +72,6 @@ void COscarLoggerAdaptor::DoLog(PMessage msg)
                         break;
                     default:;
                 }
-#endif
             }
                 break;
             default:;
