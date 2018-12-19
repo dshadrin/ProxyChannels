@@ -122,8 +122,15 @@ CLogger* CLogger::Get()
 
 void CLogger::Push(std::shared_ptr<SLogPackage> logPackage)
 {
-    boost::mutex::scoped_lock lock(m_queueMutex);
-    m_logRecords.insert(logPackage);
+    if (logPackage->lchannel != LOG_UNKNOWN_CHANNEL)
+    {
+        boost::mutex::scoped_lock lock(m_queueMutex);
+        m_logRecords.insert(logPackage);
+    }
+    else
+    {
+        LOG_WARN << "Skip log message with unknown channel";
+    }
 }
 
 bool CLogger::TimerClockHandler()

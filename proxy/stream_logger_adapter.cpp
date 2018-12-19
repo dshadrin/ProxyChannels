@@ -7,7 +7,7 @@ extern void DirectSendToLogger(std::shared_ptr<SLogPackage> logPackage);
 
 CStreamLoggerAdaptor::CStreamLoggerAdaptor(boost::property_tree::ptree& pt) :
     CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
-    m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", "RAW"))),
+    m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", PROTO_STREAM))),
     m_filterESC(pt.get<bool>("filter_esc", false)),
     m_package{ "", 
                pt.get<std::string>("tag", ""),
