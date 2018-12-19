@@ -37,7 +37,7 @@ CChannel::~CChannel()
 void CChannel::Connect()
 {
     m_connectionSource = m_source.lock()->m_sigInputMessage.connect(std::bind(&CChannel::InputMessages, this, std::placeholders::_1));
-    LOG_INFO << "Channel from " << m_source.lock()->GetName() << " to " << m_destination.lock()->GetName();
+    LOG_INFO << "Channel from " << m_source.lock()->GetName() << " to " << m_destination.lock()->GetName() << " (id = " << m_destination.lock()->GetId() << ")";
 }
 
 void CChannel::Disconnect()

@@ -93,7 +93,7 @@ void CLogger::WaitEmptyQueue()
     while (count)
     {
         {
-            boost::mutex::scoped_lock lock(m_mutex);
+            boost::mutex::scoped_lock lock(m_queueMutex);
             count = m_logRecords.size();
         }
         if (count)
@@ -121,7 +121,7 @@ CLogger* CLogger::Get()
 
 void CLogger::Push(std::shared_ptr<SLogPackage> logPackage)
 {
-    boost::mutex::scoped_lock lock(m_mutex);
+    boost::mutex::scoped_lock lock(m_queueMutex);
     m_logRecords.insert(logPackage);
 }
 
@@ -133,13 +133,13 @@ bool CLogger::TimerClockHandler()
 
 void CLogger::LogMultiplexer()
 {
-    if (m_logRecords.size() > 0)
+    if (CSink::WaitJobFlag(1000) && m_logRecords.size() > 0)
     {
         std::shared_ptr<SLogPackage> pack(new SLogPackage());
         pack->timestamp = TS::GetTimestamp();
         TS::TimestampAdjust(pack->timestamp, -LOG_OUTPUT_DELAY_MS);
 
-        boost::mutex::scoped_lock lock(m_mutex);
+        boost::mutex::scoped_lock lock(m_queueMutex);
         auto it = m_logRecords.upper_bound(pack);
 
         std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> outRecords(new std::vector<std::shared_ptr<SLogPackage>>());
@@ -155,6 +155,7 @@ void CLogger::LogMultiplexer()
                     return item->lchannel == it->Channel();
                 }) != std::end(*outRecords))
                 {
+                    it->SetFlag();
                     m_tp->SetWorkUnit([it, outRecords]() -> void
                     {
                         it->Write(outRecords);

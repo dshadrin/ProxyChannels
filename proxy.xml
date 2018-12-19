@@ -127,6 +127,16 @@
       <tag>SP01</tag>
       <filter_esc>false</filter_esc>
     </actor>
+      <actor>
+          <id>10</id>
+          <name>LOGGER-ADAPTOR</name>
+          <protocol>STREAM</protocol>
+          <severity>INFO</severity>
+          <channel>3</channel>
+          <!-- tag defines name of data source (module name in logs) -->
+          <tag>SP01</tag>
+          <filter_esc>true</filter_esc>
+      </actor>
   </actors>
   <channels>
     <channel>
@@ -165,5 +175,10 @@
       <source>6</source>
       <destination>9</destination>
     </channel>
+      <channel>
+          <id>6</id>
+          <source>6</source>
+          <destination>10</destination>
+      </channel>
   </channels>
 </proxy>

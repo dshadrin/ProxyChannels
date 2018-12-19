@@ -13,6 +13,9 @@
 // Factory method
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_MODULE_TAG(CSink, "SINK");
+boost::condition_variable CSink::m_jobCond;
+boost::mutex CSink::m_jobMutex;
+uint32_t CSink::m_jobFlag = 0;
 
 CSink* CSink::MakeSink(const std::string& name, const boost::property_tree::ptree& pt)
 {
@@ -38,6 +41,32 @@ void CSink::SetProperty(const std::string& name, const std::string& value)
 
     else if (name == "channel")
         m_channel = std::stoi(value);
+}
+
+bool CSink::WaitJobFlag(uint32_t ms)
+{
+    boost::chrono::high_resolution_clock::time_point tmEnd = boost::chrono::high_resolution_clock::now() + boost::chrono::microseconds(ms);
+    boost::cv_status cv = boost::cv_status::no_timeout;
+    boost::mutex::scoped_lock jobLock(m_jobMutex);
+    while (m_jobFlag != 0 || cv == boost::cv_status::no_timeout)
+    {
+        cv = m_jobCond.wait_until(jobLock, tmEnd);
+    }
+
+    return m_jobFlag == 0;
+}
+
+void CSink::SetFlag()
+{
+    boost::mutex::scoped_lock jobLock(m_jobMutex);
+    m_jobFlag |= JobFlag();
+}
+
+void CSink::ReleaseFlag()
+{
+    boost::mutex::scoped_lock jobLock(m_jobMutex);
+    m_jobFlag &= ~JobFlag();
+    m_jobCond.notify_all();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -135,6 +164,7 @@ void CFileSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>>
         }
     };
 
+    bool isBreak = false;
     OpenStream();
     for (auto& it : *logData)
     {
@@ -148,14 +178,14 @@ void CFileSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>>
                 case ELogCommand::eStop:
                     if (m_channel > LOG_INTERNAL_CHANNEL)
                     {
-                        CloseStream();
                         m_fileName.clear();
+                        isBreak = true;
                     }
                     else
                     {
                         LOG_WARN << "Attempt to close non applicable log channel " << (int)m_channel;
                     }
-                    return;
+                    break;
                 case ELogCommand::eChangeFile:
                     if (m_channel > LOG_INTERNAL_CHANNEL)
                     {
@@ -174,9 +204,12 @@ void CFileSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>>
                 default:
                     break;
             }
+            if (isBreak)
+                break;
         }
     }
     CloseStream();
+    ReleaseFlag();
 }
 
 void CFileSink::OpenStream()

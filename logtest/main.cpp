@@ -14,7 +14,7 @@ int main(int argc, char** argv)
         boost::this_thread::sleep_for(boost::chrono::seconds(1));
         std::cout << "Test started at  : " << TS::GetTimestampStr() << std::endl;
 
-        for (size_t i = 0; i < 1000000; ++i)
+        for (size_t i = 0; i < 100000; ++i)
         {
             LOG_TEST << "Test message: " << i;
         }
