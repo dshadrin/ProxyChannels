@@ -80,7 +80,7 @@ CConsoleSink::CConsoleSink(const boost::property_tree::ptree& pt)
     }
 }
 
-void CConsoleSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> logData)
+void CConsoleSink::Write(std::shared_ptr<std::vector<PLog>> logData)
 {
     for (auto& it : *logData)
     {
@@ -154,9 +154,9 @@ void CFileSink::CreateFileName()
     m_fileName = fName;
 }
 
-void CFileSink::Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> logData)
+void CFileSink::Write(std::shared_ptr<std::vector<PLog>> logData)
 {
-    auto writeMessage = [this](const std::shared_ptr<SLogPackage>& data) -> void
+    auto writeMessage = [this](const PLog& data) -> void
     {
         if (m_ofs.is_open())
         {

@@ -11,7 +11,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 
 ////////////////////////////////////////////////////////////////////////// 
-void DirectSendToLogger(std::shared_ptr<SLogPackage> logPackage)
+void DirectSendToLogger(PLog logPackage)
 {
     CLogger::Get()->Push(logPackage);
 }
@@ -120,7 +120,7 @@ CLogger* CLogger::Get()
     return s_Logger.get();
 }
 
-void CLogger::Push(std::shared_ptr<SLogPackage> logPackage)
+void CLogger::Push(PLog logPackage)
 {
     if (logPackage->lchannel != LOG_UNKNOWN_CHANNEL)
     {
@@ -143,14 +143,14 @@ void CLogger::LogMultiplexer()
 {
     if (CSink::WaitJobFlag(1000) && m_logRecords.size() > 0)
     {
-        std::shared_ptr<SLogPackage> pack(new SLogPackage());
+        PLog pack(new SLogPackage());
         pack->timestamp = TS::GetTimestamp();
         TS::TimestampAdjust(pack->timestamp, -LOG_OUTPUT_DELAY_MS);
 
         boost::mutex::scoped_lock lock(m_queueMutex);
         auto it = m_logRecords.upper_bound(pack);
 
-        std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> outRecords(new std::vector<std::shared_ptr<SLogPackage>>());
+        std::shared_ptr<std::vector<PLog>> outRecords(new std::vector<PLog>());
         std::copy(std::begin(m_logRecords), it, std::back_inserter(*outRecords));
         m_logRecords.erase(std::begin(m_logRecords), it);
 
@@ -158,7 +158,7 @@ void CLogger::LogMultiplexer()
         {
             for (auto& it : m_sinks)
             {
-                if (std::find_if(std::begin(*outRecords), std::end(*outRecords), [&it](const std::shared_ptr<SLogPackage>& item) -> bool
+                if (std::find_if(std::begin(*outRecords), std::end(*outRecords), [&it](const PLog& item) -> bool
                 {
                     return item->lchannel == it->Channel();
                 }) != std::end(*outRecords))

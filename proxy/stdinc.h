@@ -37,6 +37,8 @@
 #include <map>
 #include <sstream>
 
+#include <boost/noncopyable.hpp>
+#include <boost/operators.hpp>
 #include <boost/chrono.hpp>
 #include <boost/stacktrace.hpp>
 #include <boost/algorithm/string.hpp>
@@ -50,9 +52,12 @@
 namespace fs = boost::filesystem;
 
 //////////////////////////////////////////////////////////////////////////
-typedef boost::shared_ptr<std::vector<char>> PMessage;
+struct SLogPackage;
+typedef std::shared_ptr<std::vector<char>> PMessage;
+typedef std::shared_ptr<SLogPackage> PLog;
 typedef boost::signals2::signal<void(PMessage)> signal_msg_t;
 typedef boost::signals2::signal<void(size_t)> signal_erase_t;
+typedef boost::signals2::signal<void(const SLogPackage&)> signal_log_t;
 
 //////////////////////////////////////////////////////////////////////////
 #include "utils/strace_exception.h"

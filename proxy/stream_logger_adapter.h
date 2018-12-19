@@ -1,8 +1,8 @@
 #pragma once
-#include "actor.h"
+#include "log_adaptor.h"
 
 //////////////////////////////////////////////////////////////////////////
-class CStreamLoggerAdaptor : public CActor
+class CStreamLoggerAdaptor : public CLogAdaptor
 {
 public:
     CStreamLoggerAdaptor(boost::property_tree::ptree& pt);
@@ -16,7 +16,6 @@ public:
 
 private:
     ENetProtocol m_protocol;
-    bool m_filterESC;
     SLogPackage m_package;
 
 private:

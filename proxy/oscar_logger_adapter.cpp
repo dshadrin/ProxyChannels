@@ -3,7 +3,7 @@
 #include "oscar/flap_parser.h"
 #include <iostream>
 
-extern void DirectSendToLogger(std::shared_ptr<SLogPackage> logPackage);
+extern void DirectSendToLogger(PLog logPackage);
 
 COscarLoggerAdaptor::COscarLoggerAdaptor(boost::property_tree::ptree& pt) :
     CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
@@ -31,7 +31,7 @@ void COscarLoggerAdaptor::DoLog(PMessage msg)
 {
     if (m_protocol == ENetProtocol::eOscar)
     {
-        std::shared_ptr<SLogPackage> logPackage(new SLogPackage());
+        PLog logPackage(new SLogPackage());
         oscar::ostd::flap_parser fp(*msg.get());
         switch (fp.get_channel())
         {

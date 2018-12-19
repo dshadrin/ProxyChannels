@@ -74,7 +74,7 @@
     <actor>
       <id>6</id>
       <name>UART-CLIENT</name>
-      <port>1</port>
+      <port>4</port>
       <port_name>
         <windows>COM</windows>
         <!-- for linux can be a several names - /dev/tty, /dev/ttyS, etc - for detail see docs by you linux system -->
@@ -112,31 +112,32 @@
       <name>LOGGER-ADAPTOR</name>
       <protocol>STREAM</protocol>
       <severity>INFO</severity>
-      <channel>1</channel>
       <!-- tag defines name of data source (module name in logs) -->
       <tag>SP01</tag>
-      <filter_esc>true</filter_esc>
+      <channels>
+        <channel>
+          <id>1</id>
+          <filters>
+            <filter>
+              <name>REGEX-ERASE</name>
+              <expression>(\x1B\[([0-9]+;)*[0-9]*[m|h|l]{1})</expression>
+            </filter>
+          </filters>
+        </channel>
+        <channel>
+          <id>2</id>
+        </channel>
+        <channel>
+          <id>3</id>
+          <filters>
+            <filter>
+              <name>REGEX-ERASE</name>
+              <expression>(\x1B\[([0-9]+;)*[0-9]*[m|h|l]{1})</expression>
+            </filter>
+          </filters>
+        </channel>
+      </channels>
     </actor>
-    <actor>
-      <id>9</id>
-      <name>LOGGER-ADAPTOR</name>
-      <protocol>STREAM</protocol>
-      <severity>INFO</severity>
-      <channel>2</channel>
-      <!-- tag defines name of data source (module name in logs) -->
-      <tag>SP01</tag>
-      <filter_esc>false</filter_esc>
-    </actor>
-      <actor>
-          <id>10</id>
-          <name>LOGGER-ADAPTOR</name>
-          <protocol>STREAM</protocol>
-          <severity>INFO</severity>
-          <channel>3</channel>
-          <!-- tag defines name of data source (module name in logs) -->
-          <tag>SP01</tag>
-          <filter_esc>true</filter_esc>
-      </actor>
   </actors>
   <channels>
     <channel>
@@ -170,15 +171,5 @@
       <source>6</source>
       <destination>8</destination>
     </channel>
-    <channel>
-      <id>5</id>
-      <source>6</source>
-      <destination>9</destination>
-    </channel>
-      <channel>
-          <id>6</id>
-          <source>6</source>
-          <destination>10</destination>
-      </channel>
   </channels>
 </proxy>

@@ -20,7 +20,7 @@ public:
     void Stop();
 
     static CLogger* Get();
-    void Push(std::shared_ptr<SLogPackage> logPackage);
+    void Push(PLog logPackage);
 
 private:
     void WaitEmptyQueue();
@@ -32,7 +32,7 @@ private:
 private:
     thread_pool* m_tp;
     boost::mutex m_queueMutex;
-    std::multiset<std::shared_ptr<SLogPackage>, CCompareLogPackages> m_logRecords;
+    std::multiset<PLog, CCompareLogPackages> m_logRecords;
     std::vector<std::shared_ptr<CSink>> m_sinks;
 
     timer_job m_tmJob;

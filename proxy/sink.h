@@ -24,7 +24,7 @@ public:
     static CSink* MakeSink(const std::string& name, const boost::property_tree::ptree& pt);
 
     virtual void SetProperty(const std::string& name, const std::string& value);
-    virtual void Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> logData) = 0;
+    virtual void Write(std::shared_ptr<std::vector<PLog>> logData) = 0;
     int8_t Channel() const { return m_channel; }
 
     static bool WaitJobFlag(uint32_t ms);
@@ -48,7 +48,7 @@ public:
     CConsoleSink(const boost::property_tree::ptree& pt);
     virtual ~CConsoleSink() = default;
 
-    void Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> logData) override;
+    void Write(std::shared_ptr<std::vector<PLog>> logData) override;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -61,7 +61,7 @@ public:
     void SetProperty(const std::string& name, const std::string& value) override;
     void CreateFileName();
 
-    void Write(std::shared_ptr<std::vector<std::shared_ptr<SLogPackage>>> logData) override;
+    void Write(std::shared_ptr<std::vector<PLog>> logData) override;
 
 private:
     void OpenStream();

@@ -24,7 +24,7 @@ public:
 
 private:
     boost::mutex m_mtx;
-    std::size_t m_id;
+    size_t m_id;
     std::weak_ptr<CActor> m_source;
     std::weak_ptr<CActor> m_destination;
     boost::signals2::connection m_connectionSource;

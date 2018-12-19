@@ -11,7 +11,6 @@
 #define PROTO_STREAM "STREAM"
 #define PROTO_TELNET "TELNET"
 
-
 //////////////////////////////////////////////////////////////////////////
 enum class ENetProtocol : uint8_t
 {

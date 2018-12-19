@@ -3,17 +3,16 @@
 #include "oscar/flap_parser.h"
 #include <iostream>
 
-extern void DirectSendToLogger(std::shared_ptr<SLogPackage> logPackage);
+extern void DirectSendToLogger(PLog logPackage);
 
 CStreamLoggerAdaptor::CStreamLoggerAdaptor(boost::property_tree::ptree& pt) :
-    CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
+    CLogAdaptor(pt),
     m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", PROTO_STREAM))),
-    m_filterESC(pt.get<bool>("filter_esc", false)),
     m_package{ "", 
                pt.get<std::string>("tag", ""),
                {0, 0}, ELogCommand::eMessage,
                (uint8_t)StringToSeverity(pt.get<std::string>("severity", "DEBUG")),
-               pt.get<int8_t>("channel", LOG_UNKNOWN_CHANNEL) }
+               LOG_UNKNOWN_CHANNEL }
 {
     m_sigOutputMessage.connect(std::bind(&CStreamLoggerAdaptor::DoLog, this, std::placeholders::_1));
 }
@@ -42,21 +41,13 @@ void CStreamLoggerAdaptor::DoLog(PMessage msg)
 
         auto logString = [this, &pos]() -> void
         {
-            std::shared_ptr<SLogPackage> logPackage(new SLogPackage(m_package));
-            logPackage->message = m_work.buffer.substr(0, pos + 1);
+            m_package.message = m_work.buffer.substr(0, pos + 1);
             m_work.buffer.erase(0, pos + 1);
-            boost::algorithm::trim_right(logPackage->message);
-            if (!logPackage->message.empty())
+            boost::algorithm::trim_right(m_package.message);
+            if (!m_package.message.empty())
             {
-                if (m_filterESC)
-                {
-                    boost::algorithm::erase_all_regex(logPackage->message, boost::regex{ "(\x1B\\[([0-9]+;)*[0-9]*[m|h|l]{1})" });
-                }
-                if (!logPackage->message.empty())
-                {
-                    logPackage->timestamp = m_work.timestamp;
-                    DirectSendToLogger(logPackage);
-                }
+                m_package.timestamp = m_work.timestamp;
+                m_toLog(m_package);
             }
         };
 
