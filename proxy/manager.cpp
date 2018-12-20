@@ -43,6 +43,7 @@ void CManager::init()
 
         LOG_INFO << "Manager started";
         sManager->m_tp.SetWorkUnit(std::bind(&CManager::AsioServiceWork, sManager.get()));
+        sManager->m_tp.SetWorkUnit(std::bind(&CManager::AsioServiceWork, sManager.get()));
 
         sManager->RunActors();
         sManager->SetChannels();
