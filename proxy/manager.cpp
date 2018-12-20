@@ -11,6 +11,7 @@ IMPLEMENT_MODULE_TAG(CManager, "MGR");
 
 //////////////////////////////////////////////////////////////////////////
 CManager::CManager() :
+    m_sigHandler({SIGABRT, SIGFPE, SIGILL, SIGINT, SIGSEGV, SIGTERM}),
     m_tp(),
     m_ioFlag(false)
 {

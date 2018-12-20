@@ -106,6 +106,11 @@
       <id>7</id>
       <name>LOGGER-ADAPTOR</name>
       <protocol>OSCAR</protocol>
+      <sinks>
+        <sink>
+          <id>3</id>
+        </sink>
+      </sinks>
     </actor>
     <actor>
       <id>8</id>
@@ -114,8 +119,8 @@
       <severity>INFO</severity>
       <!-- tag defines name of data source (module name in logs) -->
       <tag>SP01</tag>
-      <channels>
-        <channel>
+      <sinks>
+          <sink>
           <id>1</id>
           <filters>
             <filter>
@@ -123,11 +128,11 @@
               <expression>(\x1B\[([0-9]+;)*[0-9]*[m|h|l]{1})</expression>
             </filter>
           </filters>
-        </channel>
-        <channel>
+        </sink>
+          <sink>
           <id>2</id>
-        </channel>
-        <channel>
+        </sink>
+          <sink>
           <id>3</id>
           <filters>
             <filter>
@@ -135,26 +140,18 @@
               <expression>(\x1B\[([0-9]+;)*[0-9]*[m|h|l]{1})</expression>
             </filter>
           </filters>
-        </channel>
-      </channels>
+        </sink>
+      </sinks>
     </actor>
   </actors>
   <channels>
     <channel>
       <!-- id - unique number for channel -->
-      <id>1</id>
+      <id>4</id>
       <!-- source - should be defined in actors section -->
       <source>1</source>
       <!-- desination - should be defined in actors section -->
       <destination>6</destination>
-      <options>
-        <filters>
-          <!-- cmd_filter - filter input strings by $CMD$ prefix -->
-          <!-- if $CMD$ prefix present the string will executed by 'system' call instead of transfer to dectination -->
-          <!-- by default is false -->
-          <cmd_filter>false</cmd_filter>
-        </filters>
-      </options>
     </channel>
     <channel>
       <id>2</id>

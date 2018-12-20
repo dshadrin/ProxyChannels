@@ -1,8 +1,8 @@
 #pragma once
-#include "actor.h"
+#include "log_adaptor.h"
 
 //////////////////////////////////////////////////////////////////////////
-class COscarLoggerAdaptor : public CActor
+class COscarLoggerAdaptor : public CLogAdaptor
 {
 public:
     COscarLoggerAdaptor(boost::property_tree::ptree& pt);

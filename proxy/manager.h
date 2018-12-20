@@ -2,6 +2,7 @@
 
 #include "thread_pool.h"
 #include "logger.h"
+#include "signals.h"
 #include <boost/asio/io_service.hpp>
 
 //////////////////////////////////////////////////////////////////////////
@@ -23,6 +24,7 @@ public:
     std::weak_ptr<CActor> FindActor(size_t id);
 
 private:
+    CSignalHandler m_sigHandler;
     thread_pool m_tp;
     boost::asio::io_service m_ioService;
     boost::mutex m_ioMtx;

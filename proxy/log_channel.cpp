@@ -58,7 +58,10 @@ void CLogChannel::TransferLogMessage(const SLogPackage& msg)
             filter->Execute(pMsg->message);
         }
     }
-    pMsg->lchannel = Channel();
+    if (pMsg->lchannel == LOG_UNKNOWN_CHANNEL)
+    {
+        pMsg->lchannel = Channel();
+    }
     DirectSendToLogger(pMsg);
 }
 
