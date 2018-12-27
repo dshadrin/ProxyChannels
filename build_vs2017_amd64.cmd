@@ -9,9 +9,9 @@ cd build
 cmake .. -G "Visual Studio 15 2017 Win64" -DBUILD_STATIC:BOOL=ON
 cd ../
 
-rem rmdir /S /Q build-test
-rem mkdir build-test
-rem cd build-test
-rem cmake .. -G "Visual Studio 15 2017 Win64" -DBUILD_TEST:BOOL=ON
-rem cd ../
+rmdir /S /Q build-test
+mkdir build-test
+cd build-test
+cmake .. -G "Visual Studio 15 2017 Win64" -DBUILD_TEST:BOOL=ON
+cd ../
 pause

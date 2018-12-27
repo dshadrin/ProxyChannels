@@ -29,7 +29,7 @@ private:
     void WriteHandler(const boost::system::error_code &ec, std::size_t bytesTransferred);
     void WriteNextMessage(); // Attention!!! run under lock (boost::mutex::scoped_lock lock(m_mutex);)
     void CloseLogFile();
-    void OpenNewLogFile(std::string namePrefix, std::string nameSuffix);
+    void OpenNewLogFile(const std::string& namePrefix, const std::string& nameSuffix);
 
 private:
     boost::asio::io_service m_ioService;

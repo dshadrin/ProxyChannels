@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 #include "stdinc.h"
 #include "manager.h"
 #include "configurator.h"
@@ -6,7 +8,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 boost::mutex CManager::sManagerMtx;
-std::unique_ptr<CManager> CManager::sManager;
+std::unique_ptr<CManager> CManager::s_Manager;
 IMPLEMENT_MODULE_TAG(CManager, "MGR");
 
 //////////////////////////////////////////////////////////////////////////
@@ -25,62 +27,62 @@ CManager::~CManager()
 //////////////////////////////////////////////////////////////////////////
 CManager * CManager::instance()
 {
-    return !sManager ? nullptr : sManager.get();
+    return !s_Manager ? nullptr : s_Manager.get();
 }
 
 //////////////////////////////////////////////////////////////////////////
 void CManager::init()
 {
-    if (!sManager)
+    if (!s_Manager)
     {
         boost::lock_guard<boost::mutex> lock(sManagerMtx);
-        if (!sManager)
+        if (!s_Manager)
         {
             CConfigurator::init();
-            sManager.reset(new CManager());
+            s_Manager.reset(new CManager());
         }
 
         CLogger::Get()->Start();
 
         LOG_INFO << "Manager started";
-        sManager->m_tp.SetWorkUnit(std::bind(&CManager::AsioServiceWork, sManager.get()));
-        sManager->m_tp.SetWorkUnit(std::bind(&CManager::AsioServiceWork, sManager.get()));
+        s_Manager->m_tp.SetWorkUnit(std::bind(&CManager::AsioServiceWork, s_Manager.get()));
+        s_Manager->m_tp.SetWorkUnit(std::bind(&CManager::AsioServiceWork, s_Manager.get()));
 
-        sManager->RunActors();
-        sManager->SetChannels();
+        s_Manager->RunActors();
+        s_Manager->SetChannels();
     }
 }
 
 //////////////////////////////////////////////////////////////////////////
 void CManager::reset()
 {
-    if (sManager)
+    if (s_Manager)
     {
         // stop io_service
-        if (!sManager->m_ioService.stopped())
+        if (!s_Manager->m_ioService.stopped())
         {
-            sManager->m_ioService.stop();
+            s_Manager->m_ioService.stop();
             // wait finish io_service
-            boost::unique_lock<boost::mutex> lock(sManager->m_ioMtx);
-            while (sManager->m_ioFlag)
+            boost::unique_lock<boost::mutex> lock(s_Manager->m_ioMtx);
+            while (s_Manager->m_ioFlag)
             {
-                sManager->m_ioCond.wait(lock);
+                s_Manager->m_ioCond.wait(lock);
             }
         }
 
         // Erase actors
         {
-            boost::mutex::scoped_lock lock(sManager->m_actorsMtx);
-            for (auto& actor : sManager->m_actors)
+            boost::mutex::scoped_lock lock(s_Manager->m_actorsMtx);
+            for (auto& actor : s_Manager->m_actors)
             {
                 actor.second->Stop();
             }
-            sManager->m_actors.clear();
+            s_Manager->m_actors.clear();
         }
 
         LOG_INFO << "Manager finished";
         CLogger::Get()->Stop();
-        sManager.reset();
+        s_Manager.reset();
     }
 }
 
@@ -179,7 +181,7 @@ void CManager::SetChannels()
             {
                 boost::mutex::scoped_lock lock(m_actorsMtx);
                 channelId = chCnf.second.get<size_t>("id");
-                std::shared_ptr<CChannel> channel(new CChannel(chCnf.second));
+                std::shared_ptr<CChannel> channel = std::make_shared<CChannel>(chCnf.second);
                 if (channel)
                 {
                     if (m_channels.find(channel->GetId()) == m_channels.end())

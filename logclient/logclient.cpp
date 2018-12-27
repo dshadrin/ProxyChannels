@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 #include "logclient.h"
 #include "utils/strace_exception.h"
 #include "utils/timestamp.h"
@@ -241,7 +243,7 @@ void CLogClient::CloseLogFile()
     Push(logPackage);
 }
 
-void CLogClient::OpenNewLogFile(std::string namePrefix, std::string nameSuffix)
+void CLogClient::OpenNewLogFile(const std::string& namePrefix, const std::string& nameSuffix)
 {
     std::shared_ptr<SLogPackage> logPackage(new SLogPackage());
     logPackage->command = ELogCommand::eChangeFile;

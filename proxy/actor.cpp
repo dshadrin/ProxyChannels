@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 #include "stdinc.h"
 #include "actor.h"
 #include "tcpserver.h"
@@ -6,7 +8,7 @@
 #include "stream_logger_adapter.h"
 
 //////////////////////////////////////////////////////////////////////////
-ENetProtocol ConvertProtocolName2Id(const std::string pName)
+ENetProtocol ConvertProtocolName2Id(const std::string& pName)
 {
     std::string name = boost::algorithm::to_upper_copy(pName);
 

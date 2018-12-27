@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 #include "stdinc.h"
 #include "tcpserver.h"
 #include "manager.h"
@@ -18,10 +20,10 @@ CTcpServerChild::CTcpServerChild(boost::asio::io_service& ioservice,
     m_socket(socket),
     m_inBuffSize(inBuffSize),
     m_inBuffer(new std::vector<char>(m_inBuffSize)),
-    m_bodyReadedBytes(0),
+    m_bodyReadBytes(0),
+    m_headerReadBytes(0),
     m_bodySize(0),
-    m_idleWrite(true),
-    m_partialReaded(false)
+    m_idleWrite(true)
 {
     switch (m_protocol)
     {
@@ -65,30 +67,24 @@ void CTcpServerChild::OscarHeaderReadHandler(const boost::system::error_code &ec
 {
     if (!ec)
     {
-        if (!m_partialReaded)
+        if (GetBuffer()[0] != oscar::FLAP_MARK)
         {
-            if (GetBuffer()[0] != oscar::FLAP_MARK)
+            LOG_ERR << "Input packet is not oscar protocol.";
+            DestroyMe(ec);
+        }
+        else
+        {
+            m_headerReadBytes += bytesTransferred;
+            if (m_headerReadBytes == oscar::FLAP_HEADER_SIZE)
             {
-                LOG_ERR << "Input packet is not oscar protocol.";
-                DestroyMe(ec);
+                m_bodyReadBytes = 0;
+                m_bodySize = oscar::tlv::get_value_item<uint16_t>(&GetBuffer()[oscar::FLAP_DATA_SIZE_OFFSET]);
+                m_inBuffer->resize(m_bodySize + oscar::FLAP_HEADER_SIZE);
+                boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[oscar::FLAP_HEADER_SIZE], m_bodySize), std::bind(&CTcpServerChild::OscarBodyReadHandler, this, std::placeholders::_1, std::placeholders::_2));
             }
-            else
+            else // m_headerReadBytes < oscar::FLAP_HEADER_SIZE
             {
-                if ((!m_partialReaded && bytesTransferred == oscar::FLAP_HEADER_SIZE) || m_partialReaded)
-                {
-                    m_bodyReadedBytes = 0;
-                    m_bodySize = oscar::tlv::get_value_item<uint16_t>(&GetBuffer()[oscar::FLAP_DATA_SIZE_OFFSET]);
-                    m_inBuffer->resize(m_bodySize + oscar::FLAP_HEADER_SIZE);
-                    boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[oscar::FLAP_HEADER_SIZE], m_bodySize), std::bind(&CTcpServerChild::OscarBodyReadHandler, this, std::placeholders::_1, std::placeholders::_2));
-                }
-                else if ((!m_partialReaded && bytesTransferred < oscar::FLAP_HEADER_SIZE))
-                {
-                    PMessage msg(m_inBuffer.release());
-                    m_inBuffer.reset(new std::vector<char>(oscar::FLAP_HEADER_SIZE));
-                    m_partialReaded = true;
-                    boost::asio::async_read(*m_socket, boost::asio::buffer(GetBuffer(), oscar::FLAP_HEADER_SIZE), std::bind(&CTcpServerChild::OscarHeaderReadHandler, this, std::placeholders::_1, std::placeholders::_2));
-                    m_sigInputMessage(msg);
-                }
+                boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[m_headerReadBytes], oscar::FLAP_HEADER_SIZE - m_headerReadBytes), std::bind(&CTcpServerChild::OscarHeaderReadHandler, this, std::placeholders::_1, std::placeholders::_2));
             }
         }
     }
@@ -103,21 +99,18 @@ void CTcpServerChild::OscarBodyReadHandler(const boost::system::error_code &ec, 
 {
     if (!ec)
     {
-        m_bodyReadedBytes += bytesTransferred;
-        if (m_bodyReadedBytes < m_bodySize)
+        m_bodyReadBytes += bytesTransferred;
+        if (m_bodyReadBytes < m_bodySize)
         {
-            boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[m_bodyReadedBytes], m_bodySize - m_bodyReadedBytes), std::bind(&CTcpServerChild::OscarBodyReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+            boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[m_bodyReadBytes], m_bodySize - m_bodyReadBytes), std::bind(&CTcpServerChild::OscarBodyReadHandler, this, std::placeholders::_1, std::placeholders::_2));
         }
         else
         {
             PMessage msg(m_inBuffer.release());
-            m_inBuffer.reset(new std::vector<char>(m_inBuffSize));
-
-            m_sigInputMessage(msg);
-
-            m_partialReaded = false;
-            GetBuffer().resize(oscar::FLAP_HEADER_SIZE);
+            m_headerReadBytes = 0;
+            m_inBuffer.reset(new std::vector<char>(oscar::FLAP_HEADER_SIZE));
             boost::asio::async_read(*m_socket, boost::asio::buffer(GetBuffer(), oscar::FLAP_HEADER_SIZE), std::bind(&CTcpServerChild::OscarHeaderReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+            m_sigInputMessage(msg);
         }
     }
     else
@@ -134,10 +127,8 @@ void CTcpServerChild::ReadHandler(const boost::system::error_code &ec, std::size
         m_inBuffer->resize(bytesTransferred);
         PMessage msg(m_inBuffer.release());
         m_inBuffer.reset(new std::vector<char>(m_inBuffSize));
-
-        m_sigInputMessage(msg);
-
         m_socket->async_read_some(boost::asio::buffer(*m_inBuffer.get()), std::bind(&CTcpServerChild::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+        m_sigInputMessage(msg);
     }
     else
     {

@@ -78,7 +78,7 @@ namespace oscar
                 size = std::accumulate( array, array + count, SNAC_HEADER_SIZE );
                 if ( size > std::numeric_limits<uint16_t>::max( ) )
                 {
-                    std::runtime_error( "Overflow SNAC size" );
+                    throw std::runtime_error( "Overflow SNAC size" );
                 }
             }
 

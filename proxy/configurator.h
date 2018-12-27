@@ -28,7 +28,7 @@ private:
 
 private:
     static boost::mutex sConfMtx;
-    static std::unique_ptr<CConfigurator> sConfigurator;
+    static std::unique_ptr<CConfigurator> s_Configurator;
     DECLARE_MODULE_TAG;
 };
 

@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
 * Copyright (C) 2018 Rhonda Software.
 * All rights reserved.
@@ -94,7 +96,7 @@ std::string SignalToString(int sigId)
     return it != mapSignalToString.cend() ? it->second : "UNKNOWN";
 }
 
-int StringToSignal(std::string sigName)
+int StringToSignal(const std::string& sigName)
 {
     auto it = mapStringToSignal.find(sigName);
     return it != mapStringToSignal.cend() ? it->second : NSIG;

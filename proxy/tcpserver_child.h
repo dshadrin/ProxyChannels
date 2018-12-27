@@ -48,7 +48,8 @@ private:
     std::vector<char>::size_type m_inBuffSize;
     std::unique_ptr<std::vector<char>> m_inBuffer;
     std::vector<char> m_outBuffer;
-    size_t m_bodyReadedBytes;
+    size_t m_bodyReadBytes;
+    size_t m_headerReadBytes;
     size_t m_bodySize;
     bool m_idleWrite;
     bool m_partialReaded;

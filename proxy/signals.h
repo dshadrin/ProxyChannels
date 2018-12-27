@@ -9,7 +9,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 extern std::string SignalToString(int sigId);
-extern int StringToSignal(std::string sigName);
+extern int StringToSignal(const std::string& sigName);
 
 //////////////////////////////////////////////////////////////////////////
 class CSignalException : public std::runtime_error

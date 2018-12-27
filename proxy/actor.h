@@ -20,7 +20,7 @@ enum class ENetProtocol : uint8_t
     eTelnet
 };
 
-ENetProtocol ConvertProtocolName2Id(const std::string pName);
+ENetProtocol ConvertProtocolName2Id(const std::string& pName);
 std::string ConvertId2ProtocolName(ENetProtocol pId);
 
 //////////////////////////////////////////////////////////////////////////

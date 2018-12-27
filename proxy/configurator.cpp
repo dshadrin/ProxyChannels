@@ -1,10 +1,12 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 #include "stdinc.h"
 #include "configurator.h"
 #include <boost/property_tree/xml_parser.hpp>
 #include <iostream>
 
 boost::mutex CConfigurator::sConfMtx;
-std::unique_ptr<CConfigurator> CConfigurator::sConfigurator;
+std::unique_ptr<CConfigurator> CConfigurator::s_Configurator;
 
 IMPLEMENT_MODULE_TAG(CConfigurator, "CONF");
 
@@ -28,17 +30,17 @@ CConfigurator::CConfigurator(const std::string& xmlPath)
 
 CConfigurator * CConfigurator::instance()
 {
-    return !sConfigurator ? nullptr : sConfigurator.get();
+    return !s_Configurator ? nullptr : s_Configurator.get();
 }
 
 void CConfigurator::init(const std::string& xmlPath)
 {
-    if (!sConfigurator)
+    if (!s_Configurator)
     {
         boost::lock_guard<boost::mutex> lock(sConfMtx);
-        if (!sConfigurator)
+        if (!s_Configurator)
         {
-            sConfigurator.reset(new CConfigurator(xmlPath));
+            s_Configurator.reset(new CConfigurator(xmlPath));
         }
     }
 }

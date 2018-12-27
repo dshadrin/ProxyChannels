@@ -42,6 +42,6 @@ private:
 
 private:
     static boost::mutex sManagerMtx;
-    static std::unique_ptr<CManager> sManager;
+    static std::unique_ptr<CManager> s_Manager;
     DECLARE_MODULE_TAG;
 };

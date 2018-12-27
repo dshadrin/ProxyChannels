@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 #include "timestamp.h"
 #include <boost/thread.hpp>
 
@@ -10,15 +12,15 @@ void TS::TimestampAdjust(timespec& ts, long deltaFromNowMcs)
     if (deltaFromNowMcs != 0)
     {
         int64_t mcs = ((ts.tv_sec % ONE_SECOND_IN_MICROSECONDS) * ONE_SECOND_IN_MICROSECONDS) + ts.tv_nsec + deltaFromNowMcs;
-        int64_t sec = ((ts.tv_sec / ONE_SECOND_IN_MICROSECONDS) * ONE_SECOND_IN_MICROSECONDS);
+        int64_t sec =(ts.tv_sec / ONE_SECOND_IN_MICROSECONDS) * ONE_SECOND_IN_MICROSECONDS;
 
         ts.tv_sec = sec + mcs / ONE_SECOND_IN_MICROSECONDS;
 
         long part = mcs % ONE_SECOND_IN_MICROSECONDS;
-        if (part < 0)
+        while (part < 0)
         {
             part += ONE_SECOND_IN_MICROSECONDS;
-            ts.tv_sec -= 1;
+            --ts.tv_sec;
         }
 
         ts.tv_nsec = part;
@@ -32,15 +34,14 @@ void TS::ConvertTimestamp(timespec tv, tm* tmStruct, long* us, long deltaFromNow
 
 #ifdef WIN32
     localtime_s(tmStruct, &tv.tv_sec);
-    *us = tv.tv_nsec;
 #else
     static boost::mutex mtx;
     {
         boost::mutex::scoped_lock lock(mtx);
         memcpy(tmStruct, localtime(&tv.tv_sec), sizeof(struct tm));
     }
-    *us = tv.tv_nsec;
 #endif
+    *us = tv.tv_nsec;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -72,7 +73,7 @@ std::string TS::GetTimestampStr(struct tm& tmStruct, long us)
 }
 
 //////////////////////////////////////////////////////////////////////////
-std::string TS::GetTimestampStr(timespec tv)
+std::string TS::GetTimestampStr(const timespec& tv)
 {
     tm tmStruct;
     long us;
