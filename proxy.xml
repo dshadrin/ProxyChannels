@@ -147,7 +147,7 @@
   <channels>
     <channel>
       <!-- id - unique number for channel -->
-      <id>4</id>
+      <id>1</id>
       <!-- source - should be defined in actors section -->
       <source>1</source>
       <!-- desination - should be defined in actors section -->

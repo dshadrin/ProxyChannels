@@ -18,9 +18,9 @@ thread_pool::thread_pool()
     : available_threads(boost::thread::hardware_concurrency())
     , tp_stop(false)
 {
-    if (available_threads == 0)
+    if (available_threads < 8)
     {
-        available_threads = 3;
+        available_threads = 8;
     }
 }
 
