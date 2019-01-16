@@ -137,13 +137,13 @@ void CLogger::Push(PLog logPackage)
 
 bool CLogger::TimerClockHandler()
 {
-    m_tp->SetWorkUnit(std::bind(&CLogger::LogMultiplexer, this));
+    m_tp->SetWorkUnit(std::bind(&CLogger::LogMultiplexer, this), false);
     return m_continueTimer;
 }
 
 void CLogger::LogMultiplexer()
 {
-    if (CSink::WaitJobFlag(1000) && m_logRecords.size() > 0)
+    if (CSink::WaitJobFinishAllSinks(1000) && m_logRecords.size() > 0)
     {
         PLog pack(new SLogPackage());
         pack->timestamp = TS::GetTimestamp();
@@ -165,11 +165,11 @@ void CLogger::LogMultiplexer()
                     return item->lchannel == it->Channel();
                 }) != std::end(*outRecords))
                 {
-                    it->SetFlag();
+                    CSink::IncrementJobCounter();
                     m_tp->SetWorkUnit([it, outRecords]() -> void
                     {
                         it->Write(outRecords);
-                    });
+                    }, false);
                 }
             }
         }

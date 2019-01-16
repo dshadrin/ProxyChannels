@@ -45,8 +45,8 @@ void CManager::init()
         CLogger::Get()->Start();
 
         LOG_INFO << "Manager started";
-        s_Manager->m_tp.SetWorkUnit(std::bind(&CManager::AsioServiceWork, s_Manager.get()));
-        s_Manager->m_tp.SetWorkUnit(std::bind(&CManager::AsioServiceWork, s_Manager.get()));
+        s_Manager->m_tp.SetWorkUnit(std::bind(&CManager::AsioServiceWork, s_Manager.get()), true);
+        s_Manager->m_tp.SetWorkUnit(std::bind(&CManager::AsioServiceWork, s_Manager.get()), true);
 
         s_Manager->RunActors();
         s_Manager->SetChannels();

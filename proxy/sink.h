@@ -9,6 +9,7 @@
 #include <set>
 #include <fstream>
 #include <boost/noncopyable.hpp>
+#include <atomic>
 
 //////////////////////////////////////////////////////////////////////////
 #define CONSOLE_SINK "CONSOLE"
@@ -27,10 +28,9 @@ public:
     virtual void Write(std::shared_ptr<std::vector<PLog>> logData) = 0;
     int8_t Channel() const { return m_channel; }
 
-    static bool WaitJobFlag(uint32_t ms);
-    uint32_t JobFlag() const { return 1 << m_channel; }
-    void SetFlag();
-    void ReleaseFlag();
+    static bool WaitJobFinishAllSinks(uint32_t ms);
+    static void IncrementJobCounter();
+    static void DecrementJobCounter();
 
 protected:
     ESeverity m_severity;
@@ -38,7 +38,7 @@ protected:
     DECLARE_MODULE_TAG;
     static boost::condition_variable m_jobCond;
     static boost::mutex m_jobMutex;
-    static uint32_t m_jobFlag;
+    static std::atomic_uint_fast64_t m_jobCounter;
 };
 
 //////////////////////////////////////////////////////////////////////////

@@ -29,7 +29,7 @@ public:
     ~thread_pool();
 
     void SetTimer(const timer_job& tj);          //!< start new timer
-    void SetWorkUnit(std::function<void()> wu);  //!< start new work unit
+    void SetWorkUnit(std::function<void()> wu, bool isLongWorkedThread);  //!< start new work unit
 
 private:
     thread_pool(thread_pool const&) = delete;

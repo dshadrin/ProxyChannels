@@ -17,7 +17,7 @@
 IMPLEMENT_MODULE_TAG(CSink, "SINK");
 boost::condition_variable CSink::m_jobCond;
 boost::mutex CSink::m_jobMutex;
-uint32_t CSink::m_jobFlag = 0;
+std::atomic_uint_fast64_t CSink::m_jobCounter(0);
 
 CSink* CSink::MakeSink(const std::string& name, const boost::property_tree::ptree& pt)
 {
@@ -45,29 +45,24 @@ void CSink::SetProperty(const std::string& name, const std::string& value)
         m_channel = std::stoi(value);
 }
 
-bool CSink::WaitJobFlag(uint32_t ms)
+bool CSink::WaitJobFinishAllSinks(uint32_t ms)
 {
     boost::chrono::high_resolution_clock::time_point tmEnd = boost::chrono::high_resolution_clock::now() + boost::chrono::microseconds(ms);
-    boost::cv_status cv = boost::cv_status::no_timeout;
     boost::mutex::scoped_lock jobLock(m_jobMutex);
-    while (m_jobFlag != 0 || cv == boost::cv_status::no_timeout)
-    {
-        cv = m_jobCond.wait_until(jobLock, tmEnd);
-    }
 
-    return m_jobFlag == 0;
+    m_jobCond.wait_until(jobLock, tmEnd, []() { return m_jobCounter.load() == 0; });
+
+    return m_jobCounter.load() == 0;
 }
 
-void CSink::SetFlag()
+void CSink::IncrementJobCounter()
 {
-    boost::mutex::scoped_lock jobLock(m_jobMutex);
-    m_jobFlag |= JobFlag();
+    m_jobCounter++;
 }
 
-void CSink::ReleaseFlag()
+void CSink::DecrementJobCounter()
 {
-    boost::mutex::scoped_lock jobLock(m_jobMutex);
-    m_jobFlag &= ~JobFlag();
+    m_jobCounter--;
     m_jobCond.notify_all();
 }
 
@@ -91,6 +86,7 @@ void CConsoleSink::Write(std::shared_ptr<std::vector<PLog>> logData)
             std::cout << "[" << TS::GetTimestampStr(it->timestamp) << "][" << it->tag << "][" << SeverityToString(it->severity) << "] - " << it->message << std::endl;
         }
     }
+    DecrementJobCounter();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -211,7 +207,7 @@ void CFileSink::Write(std::shared_ptr<std::vector<PLog>> logData)
         }
     }
     CloseStream();
-    ReleaseFlag();
+    DecrementJobCounter();
 }
 
 void CFileSink::OpenStream()

@@ -18,9 +18,9 @@ thread_pool::thread_pool()
     : available_threads(boost::thread::hardware_concurrency())
     , tp_stop(false)
 {
-    if (available_threads < 8)
+    if (available_threads == 0)
     {
-        available_threads = 8;
+        available_threads = 3;
     }
 }
 
@@ -130,16 +130,23 @@ void thread_pool::SetTimer(const timer_job& tj)
 }
 
 //////////////////////////////////////////////////////////////////////////
-void thread_pool::SetWorkUnit(std::function<void()> wu)
+void thread_pool::SetWorkUnit(std::function<void()> wu, bool isLongWorkedThread)
 {
-    if (available_threads > 0)
     {
-        wt_group.create_thread(std::bind(&thread_pool::work_thread, this));
-        --available_threads;
-    }
+        boost::lock_guard<boost::mutex> lock(wt_mtx);
 
-    boost::lock_guard<boost::mutex> lock(wt_mtx);
-    wt_queue.push(wu);
+        if (isLongWorkedThread)
+        {
+            wt_group.create_thread(std::bind(&thread_pool::work_thread, this));
+        }
+        else if (available_threads > 0 && wt_queue.size() > 0)
+        {
+            wt_group.create_thread(std::bind(&thread_pool::work_thread, this));
+            --available_threads;
+        }
+
+        wt_queue.push(wu);
+    }
     wt_cond.notify_one();
 }
 
