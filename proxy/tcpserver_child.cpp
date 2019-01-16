@@ -11,33 +11,19 @@ IMPLEMENT_MODULE_TAG(CTcpServerChild, "TCPC");
 
 //////////////////////////////////////////////////////////////////////////
 CTcpServerChild::CTcpServerChild(boost::asio::io_service& ioservice,
-                                 boost::asio::ip::tcp::socket* socket, size_t inBuffSize, size_t id,
-                                 signal_msg_t& sigInputMessage, ENetProtocol protocol) :
+                                 boost::asio::ip::tcp::socket* socket,
+                                 size_t inBuffSize,
+                                 size_t id,
+                                 signal_msg_t& sigInputMessage) :
     m_sigInputMessage(sigInputMessage),
     m_id(id),
-    m_protocol(protocol),
     m_ioService(ioservice),
     m_socket(socket),
     m_inBuffSize(inBuffSize),
     m_inBuffer(new std::vector<char>(m_inBuffSize)),
-    m_bodyReadBytes(0),
-    m_headerReadBytes(0),
-    m_bodySize(0),
     m_idleWrite(true)
 {
-    switch (m_protocol)
-    {
-    case ENetProtocol::eTelnet:
-        m_socket->async_read_some(boost::asio::buffer(GetBuffer()), std::bind(&CTcpServerChild::FirstReadHandler, this, std::placeholders::_1, std::placeholders::_2));
-        break;
-    case ENetProtocol::eOscar:
-        GetBuffer().resize(oscar::FLAP_HEADER_SIZE);
-        boost::asio::async_read(*m_socket, boost::asio::buffer(GetBuffer(), oscar::FLAP_HEADER_SIZE), std::bind(&CTcpServerChild::OscarHeaderReadHandler, this, std::placeholders::_1, std::placeholders::_2));
-        break;
-    case ENetProtocol::eStream:
-    default:
-        m_socket->async_read_some(boost::asio::buffer(GetBuffer()), std::bind(&CTcpServerChild::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
-    }
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -63,107 +49,12 @@ void CTcpServerChild::SendMessage(PMessage msg)
 }
 
 //////////////////////////////////////////////////////////////////////////
-void CTcpServerChild::OscarHeaderReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
-{
-    if (!ec)
-    {
-        if (GetBuffer()[0] != oscar::FLAP_MARK)
-        {
-            LOG_ERR << "Input packet is not oscar protocol.";
-            DestroyMe(ec);
-        }
-        else
-        {
-            m_headerReadBytes += bytesTransferred;
-            if (m_headerReadBytes == oscar::FLAP_HEADER_SIZE)
-            {
-                m_bodyReadBytes = 0;
-                m_bodySize = oscar::tlv::get_value_item<uint16_t>(&GetBuffer()[oscar::FLAP_DATA_SIZE_OFFSET]);
-                m_inBuffer->resize(m_bodySize + oscar::FLAP_HEADER_SIZE);
-                boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[oscar::FLAP_HEADER_SIZE], m_bodySize), std::bind(&CTcpServerChild::OscarBodyReadHandler, this, std::placeholders::_1, std::placeholders::_2));
-            }
-            else // m_headerReadBytes < oscar::FLAP_HEADER_SIZE
-            {
-                boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[m_headerReadBytes], oscar::FLAP_HEADER_SIZE - m_headerReadBytes), std::bind(&CTcpServerChild::OscarHeaderReadHandler, this, std::placeholders::_1, std::placeholders::_2));
-            }
-        }
-    }
-    else
-    {
-        DestroyMe(ec);
-    }
-}
-
-//////////////////////////////////////////////////////////////////////////
-void CTcpServerChild::OscarBodyReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
-{
-    if (!ec)
-    {
-        m_bodyReadBytes += bytesTransferred;
-        if (m_bodyReadBytes < m_bodySize)
-        {
-            boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[m_bodyReadBytes], m_bodySize - m_bodyReadBytes), std::bind(&CTcpServerChild::OscarBodyReadHandler, this, std::placeholders::_1, std::placeholders::_2));
-        }
-        else
-        {
-            PMessage msg(m_inBuffer.release());
-            m_headerReadBytes = 0;
-            m_inBuffer.reset(new std::vector<char>(oscar::FLAP_HEADER_SIZE));
-            boost::asio::async_read(*m_socket, boost::asio::buffer(GetBuffer(), oscar::FLAP_HEADER_SIZE), std::bind(&CTcpServerChild::OscarHeaderReadHandler, this, std::placeholders::_1, std::placeholders::_2));
-            m_sigInputMessage(msg);
-        }
-    }
-    else
-    {
-        DestroyMe(ec);
-    }
-}
-
-//////////////////////////////////////////////////////////////////////////
-void CTcpServerChild::ReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
-{
-    if (!ec)
-    {
-        m_inBuffer->resize(bytesTransferred);
-        PMessage msg(m_inBuffer.release());
-        m_inBuffer.reset(new std::vector<char>(m_inBuffSize));
-        m_socket->async_read_some(boost::asio::buffer(*m_inBuffer.get()), std::bind(&CTcpServerChild::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
-        m_sigInputMessage(msg);
-    }
-    else
-    {
-        DestroyMe(ec);
-    }
-}
-
-//////////////////////////////////////////////////////////////////////////
 void CTcpServerChild::DestroyMe(const boost::system::error_code &ec)
 {
     LOG_WARN << "Error async operation: " << ec.message();
     LOG_INFO << "TCP client (id = " << m_id << ") disconnected.";
     Stop();
     m_sigEraseMe(m_id);
-}
-
-//////////////////////////////////////////////////////////////////////////
-void CTcpServerChild::FirstReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
-{
-    if (!ec)
-    {
-        if (*m_inBuffer->begin() == '\xff')
-        {
-            // TODO: handle control sequence
-            m_socket->async_read_some(boost::asio::buffer(*m_inBuffer.get()), std::bind(&CTcpServerChild::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
-        }
-        else
-        {
-            ReadHandler(ec, bytesTransferred);
-        }
-    }
-    else
-    {
-        DestroyMe(ec);
-    }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -214,4 +105,181 @@ void CTcpServerChild::Stop()
     m_outMsgConn.disconnect();
     m_socket->shutdown(boost::asio::socket_base::shutdown_both);
     m_socket->close();
+}
+
+//////////////////////////////////////////////////////////////////////////
+CTcpServerChildStream::CTcpServerChildStream(boost::asio::io_service& ioservice,
+                                             boost::asio::ip::tcp::socket* socket,
+                                             size_t inBuffSize,
+                                             size_t id,
+                                             signal_msg_t& sigInputMessage) :
+    CTcpServerChild(ioservice, socket, inBuffSize, id, sigInputMessage)
+{
+    m_socket->async_read_some(boost::asio::buffer(GetBuffer()), std::bind(&CTcpServerChildStream::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+}
+
+//////////////////////////////////////////////////////////////////////////
+void CTcpServerChildStream::ReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
+{
+    ReadDataHandler(ec, bytesTransferred);
+}
+
+//////////////////////////////////////////////////////////////////////////
+void CTcpServerChildStream::ReadDataHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
+{
+    if (!ec)
+    {
+        m_inBuffer->resize(bytesTransferred);
+        PMessage msg(m_inBuffer.release());
+        m_inBuffer.reset(new std::vector<char>(m_inBuffSize));
+        m_socket->async_read_some(boost::asio::buffer(*m_inBuffer.get()), std::bind(&CTcpServerChildStream::ReadDataHandler, this, std::placeholders::_1, std::placeholders::_2));
+        m_sigInputMessage(msg);
+    }
+    else
+    {
+        DestroyMe(ec);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+CTcpServerChildTelnet::CTcpServerChildTelnet(boost::asio::io_service& ioservice,
+                                             boost::asio::ip::tcp::socket* socket,
+                                             size_t inBuffSize,
+                                             size_t id,
+                                             signal_msg_t& sigInputMessage) :
+    CTcpServerChild(ioservice, socket, inBuffSize, id, sigInputMessage)
+{
+    m_socket->async_read_some(boost::asio::buffer(GetBuffer()), std::bind(&CTcpServerChildTelnet::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+}
+
+//////////////////////////////////////////////////////////////////////////
+void CTcpServerChildTelnet::ReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
+{
+    if (!ec)
+    {
+        if (*m_inBuffer->begin() == '\xff')
+        {
+            // TODO: handle control sequence
+            m_socket->async_read_some(boost::asio::buffer(*m_inBuffer.get()), std::bind(&CTcpServerChildTelnet::ReadDataHandler, this, std::placeholders::_1, std::placeholders::_2));
+        }
+        else
+        {
+            ReadDataHandler(ec, bytesTransferred);
+        }
+    }
+    else
+    {
+        DestroyMe(ec);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+void CTcpServerChildTelnet::ReadDataHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
+{
+    if (!ec)
+    {
+        m_inBuffer->resize(bytesTransferred);
+        PMessage msg(m_inBuffer.release());
+        m_inBuffer.reset(new std::vector<char>(m_inBuffSize));
+        m_socket->async_read_some(boost::asio::buffer(*m_inBuffer.get()), std::bind(&CTcpServerChildTelnet::ReadDataHandler, this, std::placeholders::_1, std::placeholders::_2));
+        m_sigInputMessage(msg);
+    }
+    else
+    {
+        DestroyMe(ec);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+CTcpServerChildOscar::CTcpServerChildOscar(boost::asio::io_service& ioservice,
+                                           boost::asio::ip::tcp::socket* socket,
+                                           size_t inBuffSize,
+                                           size_t id,
+                                           signal_msg_t& sigInputMessage) :
+    CTcpServerChild(ioservice, socket, inBuffSize, id, sigInputMessage),
+    m_bodyReadBytes(0),
+    m_headerReadBytes(0),
+    m_bodySize(0)
+{
+    GetBuffer().resize(oscar::FLAP_HEADER_SIZE);
+    m_socket->async_read_some(boost::asio::buffer(GetBuffer()), std::bind(&CTcpServerChildOscar::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+}
+
+//////////////////////////////////////////////////////////////////////////
+void CTcpServerChildOscar::ReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
+{
+    if (!ec)
+    {
+        if (GetBuffer()[0] != oscar::FLAP_MARK)
+        {
+            LOG_ERR << "Input packet is not oscar protocol.";
+            DestroyMe(ec);
+        }
+        else
+        {
+            m_headerReadBytes += bytesTransferred;
+            if (m_headerReadBytes == oscar::FLAP_HEADER_SIZE)
+            {
+                m_bodyReadBytes = 0;
+                m_bodySize = oscar::tlv::get_value_item<uint16_t>(&GetBuffer()[oscar::FLAP_DATA_SIZE_OFFSET]);
+                m_inBuffer->resize(m_bodySize + oscar::FLAP_HEADER_SIZE);
+                boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[oscar::FLAP_HEADER_SIZE], m_bodySize), std::bind(&CTcpServerChildOscar::ReadDataHandler, this, std::placeholders::_1, std::placeholders::_2));
+            }
+            else // m_headerReadBytes < oscar::FLAP_HEADER_SIZE
+            {
+                boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[m_headerReadBytes], oscar::FLAP_HEADER_SIZE - m_headerReadBytes), std::bind(&CTcpServerChildOscar::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+            }
+        }
+    }
+    else
+    {
+        DestroyMe(ec);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+void CTcpServerChildOscar::ReadDataHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
+{
+    if (!ec)
+    {
+        m_bodyReadBytes += bytesTransferred;
+        if (m_bodyReadBytes < m_bodySize)
+        {
+            boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[m_bodyReadBytes], m_bodySize - m_bodyReadBytes), std::bind(&CTcpServerChildOscar::ReadDataHandler, this, std::placeholders::_1, std::placeholders::_2));
+        }
+        else
+        {
+            PMessage msg(m_inBuffer.release());
+            m_headerReadBytes = 0;
+            m_inBuffer.reset(new std::vector<char>(oscar::FLAP_HEADER_SIZE));
+            boost::asio::async_read(*m_socket, boost::asio::buffer(GetBuffer(), oscar::FLAP_HEADER_SIZE), std::bind(&CTcpServerChildOscar::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+            m_sigInputMessage(msg);
+        }
+    }
+    else
+    {
+        DestroyMe(ec);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+CTcpServerChildEtfLog::CTcpServerChildEtfLog(boost::asio::io_service& ioservice,
+                                             boost::asio::ip::tcp::socket* socket,
+                                             size_t inBuffSize,
+                                             size_t id,
+                                             signal_msg_t& sigInputMessage) :
+    CTcpServerChild(ioservice, socket, inBuffSize, id, sigInputMessage)
+{
+    m_socket->async_read_some(boost::asio::buffer(GetBuffer()), std::bind(&CTcpServerChildEtfLog::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+}
+
+//////////////////////////////////////////////////////////////////////////
+void CTcpServerChildEtfLog::ReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
+{
+    // TODO: implement
+}
+
+void CTcpServerChildEtfLog::ReadDataHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
+{
+    // TODO: implement
 }

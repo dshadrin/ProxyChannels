@@ -21,6 +21,9 @@ ENetProtocol ConvertProtocolName2Id(const std::string& pName)
     else if (name == PROTO_TELNET)
         return ENetProtocol::eTelnet;
 
+    else if (name == PROTO_ETFLOG)
+        return ENetProtocol::eEtfLog;
+
     APP_EXCEPTION_ERROR(GMSG << "Unknown protocol name: " << pName);
 }
 
@@ -34,6 +37,8 @@ std::string ConvertId2ProtocolName(ENetProtocol pId)
         return PROTO_STREAM;
     case ENetProtocol::eTelnet:
         return PROTO_TELNET;
+    case ENetProtocol::eEtfLog:
+        return PROTO_ETFLOG;
     default:
         APP_EXCEPTION_ERROR(GMSG << "Unknown protocol id: " << (int)pId);
     }
@@ -57,8 +62,23 @@ CActor* CActor::MakeActor(boost::property_tree::ptree& pt)
         LOG_DEBUG << "Begin creating actor " << actorName << "(protocol = " << actorProto << ", id = " << actorId << ")";
 
         if (actorName == TCP_SERVER)
-            actor = new CTcpServerActor(pt);
-
+        {
+            switch (ConvertProtocolName2Id(actorProto))
+            {
+                case ENetProtocol::eOscar:
+                    actor = new CTcpServerActor<CTcpServerChildOscar>(pt);
+                    break;
+                case ENetProtocol::eStream:
+                    actor = new CTcpServerActor<CTcpServerChildStream>(pt);
+                    break;
+                case ENetProtocol::eTelnet:
+                    actor = new CTcpServerActor<CTcpServerChildTelnet>(pt);
+                    break;
+                case ENetProtocol::eEtfLog:
+                    actor = new CTcpServerActor<CTcpServerChildEtfLog>(pt);
+                    break;
+            };
+        }
         else if (actorName == UART_CLIENT)
         {
             LOG_DEBUG << "Try to open serial port: " << CTerminal::MakePortName(pt);

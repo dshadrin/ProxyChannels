@@ -10,6 +10,7 @@
 #define PROTO_OSCAR "OSCAR"
 #define PROTO_STREAM "STREAM"
 #define PROTO_TELNET "TELNET"
+#define PROTO_ETFLOG "ETFLOG"
 
 //////////////////////////////////////////////////////////////////////////
 enum class ENetProtocol : uint8_t
@@ -17,7 +18,8 @@ enum class ENetProtocol : uint8_t
     eOscar,
     // insert new protocols before this line
     eStream,
-    eTelnet
+    eTelnet,
+    eEtfLog
 };
 
 ENetProtocol ConvertProtocolName2Id(const std::string& pName);
