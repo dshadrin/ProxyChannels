@@ -22,7 +22,8 @@ int main(int argc, char** argv)
             boost::this_thread::sleep_for(boost::chrono::seconds(1));
             LOG_INFO << "Monitor started.";
             std::string str;
-            std::cin >> str;
+//            std::cin >> str;
+            boost::this_thread::sleep_for(boost::chrono::seconds(300));
             LOG_INFO << "Monitor finished.";
             boost::this_thread::sleep_for(boost::chrono::seconds(1));
 #ifndef LOGGING_DIRECT

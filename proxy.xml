@@ -143,6 +143,10 @@
         </sink>
       </sinks>
     </actor>
+    <actor>
+      <id>9</id>
+      <name>STDIN</name>
+    </actor>
   </actors>
   <channels>
     <channel>
