@@ -70,7 +70,7 @@ void CTcpServerActor<_Client>::Stop()
     m_socket->close();
 
     boost::mutex::scoped_lock lock(m_mtxTcpServer);
-    for (std::list<_Client>::iterator itClient = m_clients.begin(); itClient != m_clients.end(); )
+    for (typename std::list<_Client>::iterator itClient = m_clients.begin(); itClient != m_clients.end(); )
     {
         LOG_INFO << "Erase client with id = " << itClient->Id();
 
