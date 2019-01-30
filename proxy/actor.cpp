@@ -7,6 +7,7 @@
 #include "oscar_logger_adapter.h"
 #include "stream_logger_adapter.h"
 #include "etf_logger_adapter.h"
+#include "console.h"
 
 //////////////////////////////////////////////////////////////////////////
 ENetProtocol ConvertProtocolName2Id(const std::string& pName)
@@ -79,6 +80,11 @@ CActor* CActor::MakeActor(boost::property_tree::ptree& pt)
                     actor = new CTcpServerActor<CTcpServerChildEtfLog>(pt);
                     break;
             };
+        }
+        else if (actorName == CONSOLE)
+        {
+            LOG_DEBUG << "Try to console input handler";
+            actor = new CConsoleActor(pt);
         }
         else if (actorName == UART_CLIENT)
         {
