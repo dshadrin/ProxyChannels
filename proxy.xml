@@ -65,6 +65,13 @@
     </actor>
     <!-- this actor used for oscar protocol, oscar protocol used for logger -->
     <actor>
+      <id>4</id>
+      <name>TCP-SERVER</name>
+      <port>2003</port>
+      <input_buffer_size>12</input_buffer_size>
+      <protocol>ETFLOG</protocol>
+    </actor>
+    <actor>
       <id>5</id>
       <name>TCP-SERVER</name>
       <port>2100</port>
@@ -74,7 +81,7 @@
     <actor>
       <id>6</id>
       <name>UART-CLIENT</name>
-      <port>4</port>
+      <port>1</port>
       <port_name>
         <windows>COM</windows>
         <!-- for linux can be a several names - /dev/tty, /dev/ttyS, etc - for detail see docs by you linux system -->
@@ -106,6 +113,16 @@
       <id>7</id>
       <name>LOGGER-ADAPTOR</name>
       <protocol>OSCAR</protocol>
+      <sinks>
+        <sink>
+          <id>3</id>
+        </sink>
+      </sinks>
+    </actor>
+    <actor>
+      <id>9</id>
+      <name>LOGGER-ADAPTOR</name>
+      <protocol>ETFLOG</protocol>
       <sinks>
         <sink>
           <id>3</id>
@@ -167,6 +184,11 @@
       <id>4</id>
       <source>6</source>
       <destination>8</destination>
+    </channel>
+    <channel>
+      <id>5</id>
+      <source>4</source>
+      <destination>9</destination>
     </channel>
   </channels>
 </proxy>

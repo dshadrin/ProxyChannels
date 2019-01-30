@@ -268,18 +268,91 @@ CTcpServerChildEtfLog::CTcpServerChildEtfLog(boost::asio::io_service& ioservice,
                                              size_t inBuffSize,
                                              size_t id,
                                              signal_msg_t& sigInputMessage) :
-    CTcpServerChild(ioservice, socket, inBuffSize, id, sigInputMessage)
+    CTcpServerChild(ioservice, socket, inBuffSize, id, sigInputMessage),
+    m_bodyReadBytes(0),
+    m_headerReadBytes(0),
+    m_bodySize(0)
 {
+    PLog msg(new SLogPackage);
+    msg->message = "Log";
+    msg->tag = "rpc";
+    msg->lchannel = LOG_CLIENT_CHANNEL;
+    msg->timestamp = TS::GetTimestamp();
+    msg->command = ELogCommand::eChangeFile;
+    DirectSendToLogger(msg);
+
     m_socket->async_read_some(boost::asio::buffer(GetBuffer()), std::bind(&CTcpServerChildEtfLog::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+}
+
+
+CTcpServerChildEtfLog::~CTcpServerChildEtfLog()
+{
+    PLog msg(new SLogPackage);
+    msg->lchannel = LOG_CLIENT_CHANNEL;
+    msg->timestamp = TS::GetTimestamp();
+    msg->command = ELogCommand::eStop;
+    DirectSendToLogger(msg);
 }
 
 //////////////////////////////////////////////////////////////////////////
 void CTcpServerChildEtfLog::ReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
 {
-    // TODO: implement
+    if (!ec)
+    {
+        if (GetBuffer()[0] != 'L')
+        {
+            LOG_ERR << "Input packet is not ETF log protocol.";
+            DestroyMe(ec);
+        }
+        else
+        {
+            m_headerReadBytes += bytesTransferred;
+            if (m_headerReadBytes == ETF_LOG_HEADER_SIZE)
+            {
+                m_bodyReadBytes = 0;
+                m_bodySize = reinterpret_cast<SEtfLogHeader*>(&GetBuffer()[0])->msgSize;
+                if (m_bodySize > 0)
+                {
+                    m_inBuffer->resize(m_bodySize + ETF_LOG_HEADER_SIZE);
+                    boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[ETF_LOG_HEADER_SIZE], m_bodySize), std::bind(&CTcpServerChildEtfLog::ReadDataHandler, this, std::placeholders::_1, std::placeholders::_2));
+                }
+                else
+                {
+                    ReadDataHandler(ec, m_bodySize);
+                }
+            }
+            else // ETF_LOG_HEADER_SIZE
+            {
+                boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[m_headerReadBytes], ETF_LOG_HEADER_SIZE - m_headerReadBytes), std::bind(&CTcpServerChildEtfLog::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+            }
+        }
+    }
+    else
+    {
+        DestroyMe(ec);
+    }
 }
 
 void CTcpServerChildEtfLog::ReadDataHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
 {
-    // TODO: implement
+    if (!ec)
+    {
+        m_bodyReadBytes += bytesTransferred;
+        if (m_bodyReadBytes < m_bodySize)
+        {
+            boost::asio::async_read(*m_socket, boost::asio::buffer(&GetBuffer()[m_bodyReadBytes], m_bodySize - m_bodyReadBytes), std::bind(&CTcpServerChildEtfLog::ReadDataHandler, this, std::placeholders::_1, std::placeholders::_2));
+        }
+        else
+        {
+            PMessage msg(m_inBuffer.release());
+            m_headerReadBytes = 0;
+            m_inBuffer.reset(new std::vector<char>(ETF_LOG_HEADER_SIZE));
+            boost::asio::async_read(*m_socket, boost::asio::buffer(GetBuffer(), oscar::FLAP_HEADER_SIZE), std::bind(&CTcpServerChildEtfLog::ReadHandler, this, std::placeholders::_1, std::placeholders::_2));
+            m_sigInputMessage(msg);
+        }
+    }
+    else
+    {
+        DestroyMe(ec);
+    }
 }

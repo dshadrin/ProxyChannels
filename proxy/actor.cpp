@@ -6,6 +6,7 @@
 #include "terminal.h"
 #include "oscar_logger_adapter.h"
 #include "stream_logger_adapter.h"
+#include "etf_logger_adapter.h"
 
 //////////////////////////////////////////////////////////////////////////
 ENetProtocol ConvertProtocolName2Id(const std::string& pName)
@@ -87,15 +88,20 @@ CActor* CActor::MakeActor(boost::property_tree::ptree& pt)
 
         else if (actorName == LOGGER_ADAPTOR)
         {
-            if (actorProto == PROTO_OSCAR)
-                actor = new COscarLoggerAdaptor(pt);
-
-            else if (actorProto == PROTO_STREAM)
-                actor = new CStreamLoggerAdaptor(pt);
-
-            else
+            switch (ConvertProtocolName2Id(actorProto))
             {
-                APP_EXCEPTION_ERROR(GMSG << "Unknown adaptor protocol: " << actorProto);
+                case ENetProtocol::eOscar:
+                    actor = new COscarLoggerAdaptor(pt);
+                    break;
+                case ENetProtocol::eStream:
+                    actor = new CStreamLoggerAdaptor(pt);
+                    break;
+                case ENetProtocol::eEtfLog:
+                    actor = new CEtfLoggerAdaptor(pt);
+                    break;
+                default:
+                    APP_EXCEPTION_ERROR(GMSG << "Unsupported adaptor protocol: " << actorProto);
+                    break;
             }
         }
         else

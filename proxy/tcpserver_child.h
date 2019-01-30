@@ -110,7 +110,13 @@ public:
                                   size_t id,
                                   signal_msg_t& sigInputMessage);
 
-    virtual ~CTcpServerChildEtfLog() = default;
+    virtual ~CTcpServerChildEtfLog();
     void ReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred) override;
     void ReadDataHandler(const boost::system::error_code &ec, std::size_t bytesTransferred) override;
+
+private:
+    size_t m_bodyReadBytes;
+    size_t m_headerReadBytes;
+    size_t m_bodySize;
+    signal_log_t m_toLog;
 };

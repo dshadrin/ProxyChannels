@@ -22,6 +22,18 @@ enum class ENetProtocol : uint8_t
     eEtfLog
 };
 
+#pragma pack( push, 1 )
+struct SEtfLogHeader
+{
+    uint8_t  tag[3];
+    uint8_t  type;
+    uint8_t  severity;
+    uint8_t  module[3];
+    uint32_t msgSize;
+};
+#pragma pack( pop )
+const size_t ETF_LOG_HEADER_SIZE = sizeof(SEtfLogHeader);
+
 ENetProtocol ConvertProtocolName2Id(const std::string& pName);
 std::string ConvertId2ProtocolName(ENetProtocol pId);
 
