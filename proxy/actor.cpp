@@ -8,6 +8,7 @@
 #include "stream_logger_adapter.h"
 #include "etf_logger_adapter.h"
 #include "console.h"
+#include "manager_adaptor.h"
 
 //////////////////////////////////////////////////////////////////////////
 ENetProtocol ConvertProtocolName2Id(const std::string& pName)
@@ -91,7 +92,11 @@ CActor* CActor::MakeActor(boost::property_tree::ptree& pt)
             LOG_DEBUG << "Try to open serial port: " << CTerminal::MakePortName(pt);
             actor = new CTerminal(pt);
         }
-
+        else if (actorName == MANAGER_ADAPTOR)
+        {
+            LOG_DEBUG << "Try to create manager adaptor";
+            actor = new CManagerAdaptor(pt);
+        }
         else if (actorName == LOGGER_ADAPTOR)
         {
             switch (ConvertProtocolName2Id(actorProto))

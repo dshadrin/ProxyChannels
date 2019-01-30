@@ -46,7 +46,7 @@ IMPLEMENT_MODULE_TAG(CTcpServerActor<_Client>, "TCPS");
 template<class _Client>
 CTcpServerActor<_Client>::CTcpServerActor(boost::property_tree::ptree& pt) :
     CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
-    m_port(pt.get<uint16_t>("port", 2002)),
+    m_port(pt.get<uint16_t>("port", 23)),
     m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", PROTO_TELNET))),
     m_ioService(CManager::instance()->IoService()),
     m_tcpEndpoint{ boost::asio::ip::tcp::v4(), m_port },

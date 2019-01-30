@@ -15,7 +15,8 @@ IMPLEMENT_MODULE_TAG(CManager, "MGR");
 CManager::CManager() :
     m_sigHandler({SIGABRT, SIGFPE, SIGILL, SIGINT, SIGSEGV, SIGTERM}),
     m_tp(),
-    m_ioFlag(false)
+    m_ioFlag(false),
+    m_stopFlag(false)
 {
 }
 
@@ -35,11 +36,13 @@ void CManager::init()
 {
     if (!s_Manager)
     {
-        boost::lock_guard<boost::mutex> lock(sManagerMtx);
-        if (!s_Manager)
         {
-            CConfigurator::init();
-            s_Manager.reset(new CManager());
+            boost::lock_guard<boost::mutex> lock(sManagerMtx);
+            if (!s_Manager)
+            {
+                CConfigurator::init();
+                s_Manager.reset(new CManager());
+            }
         }
 
         CLogger::Get()->Start();
@@ -50,6 +53,13 @@ void CManager::init()
 
         s_Manager->RunActors();
         s_Manager->SetChannels();
+
+        // blocks while stop
+        boost::mutex::scoped_lock stopLock(s_Manager->m_stopMtx);
+        s_Manager->m_stopCond.wait(stopLock, []() -> bool
+        {
+            return s_Manager->m_stopFlag;
+        });
     }
 }
 
@@ -84,6 +94,14 @@ void CManager::reset()
         CLogger::Get()->Stop();
         s_Manager.reset();
     }
+}
+
+
+void CManager::Stop()
+{
+    boost::mutex::scoped_lock lock(m_stopMtx);
+    m_stopFlag = true;
+    m_stopCond.notify_all();
 }
 
 std::weak_ptr<CActor> CManager::FindActor(size_t id)
