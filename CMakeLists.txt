@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.15)
 
 if(NOT BUILD_TEST AND BUILD_STATIC)
   set(STATIC_PROXY ON)

@@ -16,8 +16,9 @@ set(BOOST_LIB_LIST
   filesystem
   thread
   regex
+  date_time
 )
 
-find_package(Boost COMPONENTS ${BOOST_LIB_LIST} REQUIRED)
+find_package(Boost 1.71 COMPONENTS ${BOOST_LIB_LIST} REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 message(STATUS "Boost LIBRARIES: ${Boost_LIBRARIES}")
