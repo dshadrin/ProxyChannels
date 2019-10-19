@@ -21,24 +21,14 @@ CConsoleActor::CConsoleActor(boost::property_tree::ptree& pt) :
 void CConsoleActor::ReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
 {
     std::string inStr;
-    if (!ec)
+    if (!ec || ec == boost::asio::error::not_found)
     {
-        // Write the message (minus the newline) to the server.
-        inStr.resize(bytesTransferred - 1);
-        m_inBuffer.sgetn((char*)inStr.data(), bytesTransferred - 1);
-        m_inBuffer.consume(1); // Remove newline from input.
-
-        LOG_DEBUG << "Read from console(1): " << inStr;
-        Start();
-    }
-    else if (ec == boost::asio::error::not_found)
-    {
-        // Didn't get a newline. Send whatever we have.
         inStr.resize(bytesTransferred);
         m_inBuffer.sgetn((char*)inStr.data(), bytesTransferred);
-
-        LOG_DEBUG << "Read from console(2): " << inStr;
+        PMessage msg = std::make_shared<std::vector<char>>(std::vector<char>(inStr.begin(), inStr.end()));
+        LOG_DEBUG << "Read from console: " << inStr;
         Start();
+        m_sigInputMessage(msg);
     }
     else
     {

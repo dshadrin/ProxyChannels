@@ -17,6 +17,7 @@ set(BOOST_LIB_LIST
   thread
   regex
   date_time
+  chrono
 )
 
 find_package(Boost 1.71 COMPONENTS ${BOOST_LIB_LIST} REQUIRED)
