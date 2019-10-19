@@ -2,5 +2,6 @@ build/
 build*/
 dist/
 .idea/
+.vs/
 cmake-build-*/
 ssl/

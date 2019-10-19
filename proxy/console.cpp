@@ -11,9 +11,9 @@ IMPLEMENT_MODULE_TAG(CConsoleActor, "CON ");
 
 CConsoleActor::CConsoleActor(boost::property_tree::ptree& pt) :
     CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
-    m_ioService(CManager::instance()->IoService())
-    ,m_in(m_ioService, ::dup(STDIN_FILENO))
-    ,m_inBuffer(MAX_BODY_LENGTH)
+    m_ioService(CManager::instance()->IoService()),
+    m_in(m_ioService, ::dup(STDIN_FILENO)),
+    m_inBuffer(MAX_BODY_LENGTH)
 {
 
 }
