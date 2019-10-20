@@ -8,9 +8,15 @@
 #endif
 #include "utils/strace_exception.h"
 #include <iostream>
+#ifdef WIN32
+#include <clocale>
+#endif
 
 int main(int argc, char** argv)
 {
+#ifdef WIN32
+    setlocale( LC_ALL, "Russian" );
+#endif
     DEFINE_MODULE_TAG("MAPP");
     CLogMessageBuilder::SetLoggingChannel(0);
     std::cout << proxy::version() << std::endl;

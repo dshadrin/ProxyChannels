@@ -164,6 +164,7 @@
       <id>10</id>
       <name>CONSOLE</name>
       <protocol>TELNET</protocol>
+      <timer-delay>50</timer-delay>
     </actor>
     <actor>
       <id>11</id>

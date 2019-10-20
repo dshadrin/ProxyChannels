@@ -2,7 +2,11 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 #include "stdinc.h"
 #include "console.h"
-#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
+#if defined(BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR) || defined(WIN32)
+
+#ifdef WIN32
+#include <conio.h>
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_MODULE_TAG(CConsoleActor, "CON ");
@@ -12,23 +16,51 @@ IMPLEMENT_MODULE_TAG(CConsoleActor, "CON ");
 CConsoleActor::CConsoleActor(boost::property_tree::ptree& pt) :
     CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
     m_ioService(CManager::instance()->IoService()),
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
     m_in(m_ioService, ::dup(STDIN_FILENO)),
     m_inBuffer(MAX_BODY_LENGTH)
+#elif defined WIN32
+    m_steadyTimer{m_ioService, boost::chrono::milliseconds(pt.get<uint32_t>("timer-delay", 100)) }
+#endif
 {
 
 }
 
 void CConsoleActor::ReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred)
 {
-    std::string inStr;
     if (!ec || ec == boost::asio::error::not_found)
     {
+        std::string inStr;
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
         inStr.resize(bytesTransferred);
         m_inBuffer.sgetn((char*)inStr.data(), bytesTransferred);
-        PMessage msg = std::make_shared<std::vector<char>>(std::vector<char>(inStr.begin(), inStr.end()));
-        LOG_DEBUG << "Read from console: " << inStr;
         Start();
-        m_sigInputMessage(msg);
+#elif defined WIN32
+        Start();
+        while ( _kbhit() != 0 )
+        {
+            char ch = static_cast<char>( _getche() );
+            if ( ch == 0 || ch == 0xE0 )
+            {
+                ch = _getche();
+            }
+            else
+            {
+                if ( ch == '\r' )
+                {
+                    inStr.push_back( ch );
+                    ch = '\n';
+                    _putch( ch );
+                }
+                inStr.push_back( ch );
+            }
+        }
+#endif
+        if ( !inStr.empty() )
+        {
+            PMessage msg = std::make_shared<std::vector<char>>( inStr.begin(), inStr.end() );
+            m_sigInputMessage( msg );
+        }
     }
     else
     {
@@ -38,14 +70,22 @@ void CConsoleActor::ReadHandler(const boost::system::error_code &ec, std::size_t
 
 void CConsoleActor::Stop()
 {
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
     m_in.close();
+#elif defined WIN32
+    m_steadyTimer.cancel();
+#endif
 }
 
 void CConsoleActor::Start()
 {
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
     boost::asio::async_read_until(m_in, m_inBuffer, '\n',
                                   boost::bind(&CConsoleActor::ReadHandler, this,
                                               boost::asio::placeholders::error,
                                               boost::asio::placeholders::bytes_transferred));
+#elif defined WIN32
+    m_steadyTimer.async_wait( boost::bind( &CConsoleActor::ReadHandler, this, boost::asio::placeholders::error, 0 ) );
+#endif
 }
 #endif
