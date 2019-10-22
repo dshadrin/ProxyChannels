@@ -1,6 +1,6 @@
 @echo off
 
-set BOOST_INCLUDEDIR=d:\usr\include\boost-1_69
+set BOOST_INCLUDEDIR=d:\usr\include\boost-1_71
 set BOOST_LIBRARYDIR=d:\usr\lib
 
 rmdir /S /Q build

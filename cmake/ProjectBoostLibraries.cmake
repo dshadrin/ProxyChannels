@@ -21,5 +21,6 @@ set(BOOST_LIB_LIST
 )
 
 find_package(Boost 1.71 COMPONENTS ${BOOST_LIB_LIST} REQUIRED)
+message(STATUS "Boost INCLUDES: ${Boost_INCLUDE_DIRS}")
 include_directories(${Boost_INCLUDE_DIRS})
 message(STATUS "Boost LIBRARIES: ${Boost_LIBRARIES}")

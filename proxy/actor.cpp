@@ -122,6 +122,10 @@ CActor* CActor::MakeActor(boost::property_tree::ptree& pt)
 
         LOG_DEBUG << "Created actor " << actorName << "(protocol = " << actorProto << ", id = " << actorId << ")";
     }
+    catch (const boost::system::system_error & s)
+    {
+        LOG_ERR << "Cannot create actor " << actorName << "(protocol = " << actorProto << ", id = " << actorId << ")" << ": " << s.what();
+    }
     catch (const std::exception& e)
     {
         LOG_ERR << "Cannot create actor " << actorName << "(protocol = " << actorProto << ", id = " << actorId << ")" << ": " << e.what();
