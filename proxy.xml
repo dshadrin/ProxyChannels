@@ -81,7 +81,7 @@
     <actor>
       <id>6</id>
       <name>UART-CLIENT</name>
-      <port>1</port>
+      <port>5</port>
       <port_name>
         <windows>COM</windows>
         <!-- for linux can be a several names - /dev/tty, /dev/ttyS, etc - for detail see docs by you linux system -->

@@ -3,6 +3,7 @@
 ###
 if(MSVC)
   set(Boost_USE_STATIC_LIBS ON)
+#  set(Boost_COMPILER "vc142")
 elseif(MINGW)
   set(Boost_USE_STATIC_LIBS ON)
 elseif(UNIX)

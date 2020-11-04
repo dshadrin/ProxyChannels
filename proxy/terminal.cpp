@@ -17,52 +17,14 @@ IMPLEMENT_MODULE_TAG(CTerminal, "UART");
 CTerminal::CTerminal(boost::property_tree::ptree& pt) :
     CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
     m_ioService(CManager::instance()->IoService()),
+    m_pt(pt),
     m_inBuffSize(pt.get<uint16_t>("input_buffer_size", 1024)),
     m_strPortName(MakePortName(pt)),
-    m_port(m_ioService, m_strPortName),
     m_ReadBuffer(new std::vector<char>(m_inBuffSize)),
-    bWriteInProgress(false)
+    bWriteInProgress(false),
+    bIsOpened(false)
 {
-    if (!m_port.is_open())
-    {
-        APP_EXCEPTION_ERROR(GMSG << "Error UART: Failed to open serial m_port - (" << m_strPortName << ")");
-    }
-
-    try
-    {
-        std::string valueStr;
-        std::ostringstream oss;
-        oss << UART_CLIENT " connected on " << m_strPortName << std::endl;
-
-        unsigned int baud = pt.get<unsigned int>("option.baud_rate", 115200);
-        boost::asio::serial_port_base::baud_rate baud_option(baud);
-        m_port.set_option(baud_option); // set the baud rate after the m_port has been opened
-        oss << "                      baud rate         : " << baud << std::endl;
-
-        boost::asio::serial_port_base::flow_control flow_control_option(FlowControlType(pt, &valueStr));
-        m_port.set_option(flow_control_option); // set the baud rate after the m_port has been opened
-        oss << "                      flow control      : " << valueStr << std::endl;
-
-        boost::asio::serial_port_base::parity parity_option(ParityType(pt, &valueStr));
-        m_port.set_option(parity_option); // set the baud rate after the m_port has been opened
-        oss << "                      parity            : " << valueStr << std::endl;
-
-        boost::asio::serial_port_base::stop_bits stop_bits_option(StopBits(pt, &valueStr));
-        m_port.set_option(stop_bits_option); // set the baud rate after the m_port has been opened
-        oss << "                      stop bits         : " << valueStr << std::endl;
-
-        unsigned int chSize = pt.get<unsigned int>("option.character_size", 8);
-        boost::asio::serial_port_base::character_size character_size_option(chSize);
-        m_port.set_option(character_size_option); // set the baud rate after the m_port has been opened
-        oss << "                      character size    : " << chSize << std::endl;
-
-        LOG_INFO << oss.str();
-        m_sigOutputMessage.connect(std::bind(&CTerminal::DoWrite, this, std::placeholders::_1));
-    }
-    catch ( std::exception &e )
-    {
-        APP_EXCEPTION_ERROR(GMSG << "Error UART set option on port " << m_strPortName << ": " << e.what());
-    }
+    Setup();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -71,9 +33,98 @@ CTerminal::~CTerminal()
     LOG_INFO << "Destroyed UART client (port = " << GetName() << ")";
 }
 
+//////////////////////////////////////////////////////////////////////////
+bool CTerminal::Setup()
+{
+    boost::system::error_code ec;
+    try
+    {
+        if (!CManager::instance()->IsStopped())
+        {
+            m_port.reset( new boost::asio::serial_port( m_ioService ) );
+            m_port->open( m_strPortName, ec );
+
+            if (ec)
+            {
+                SetupAsync();
+                return false;
+            }
+            else
+            {
+                try
+                {
+                    std::string valueStr;
+                    std::ostringstream oss;
+                    oss << UART_CLIENT " connected on " << m_strPortName << std::endl;
+
+                    unsigned int baud = m_pt.get<unsigned int>( "option.baud_rate", 115200 );
+                    boost::asio::serial_port_base::baud_rate baud_option( baud );
+                    m_port->set_option( baud_option ); // set the baud rate after the m_port has been opened
+                    oss << "                      baud rate         : " << baud << std::endl;
+
+                    boost::asio::serial_port_base::flow_control flow_control_option( FlowControlType( m_pt, &valueStr ) );
+                    m_port->set_option( flow_control_option ); // set the baud rate after the m_port has been opened
+                    oss << "                      flow control      : " << valueStr << std::endl;
+
+                    boost::asio::serial_port_base::parity parity_option( ParityType( m_pt, &valueStr ) );
+                    m_port->set_option( parity_option ); // set the baud rate after the m_port has been opened
+                    oss << "                      parity            : " << valueStr << std::endl;
+
+                    boost::asio::serial_port_base::stop_bits stop_bits_option( StopBits( m_pt, &valueStr ) );
+                    m_port->set_option( stop_bits_option ); // set the baud rate after the m_port has been opened
+                    oss << "                      stop bits         : " << valueStr << std::endl;
+
+                    unsigned int chSize = m_pt.get<unsigned int>( "option.character_size", 8 );
+                    boost::asio::serial_port_base::character_size character_size_option( chSize );
+                    m_port->set_option( character_size_option ); // set the baud rate after the m_port has been opened
+                    oss << "                      character size    : " << chSize << std::endl;
+
+                    LOG_INFO << oss.str();
+                    if (m_sigOutputMessage.empty())
+                    {
+                        m_sigOutputMessage.connect( std::bind( &CTerminal::DoWrite, this, std::placeholders::_1 ) );
+                    }
+                    bIsOpened = true;
+                }
+                catch (std::exception& e)
+                {
+                    APP_EXCEPTION_ERROR( GMSG << "Error UART set option on port " << m_strPortName << ": " << e.what() );
+                }
+            }
+
+            if (!m_WriteBuffer.empty())
+            {
+                bWriteInProgress = true;
+                WriteStart();
+            }
+            ReadStart();
+        }
+    }
+    catch (const std::exception&)
+    {
+
+    }
+    return true;
+}
+
+void CTerminal::SetupAsync()
+{
+    bIsOpened = false;
+    bWriteInProgress = false;
+    std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+    if (CManager::instance() != nullptr)
+    {
+        if (!CManager::instance()->IsStopped())
+        {
+            thread_pool& tp = CManager::instance()->ThreadPool();
+            tp.SetWorkUnit( std::bind( &CTerminal::Setup, this ), false );
+        }
+    }
+}
+
 void CTerminal::Start()
 {
-    ReadStart();
+    // do nothing
 }
 
 void CTerminal::Stop()
@@ -87,7 +138,7 @@ void CTerminal::Stop()
 //////////////////////////////////////////////////////////////////////////
 void CTerminal::ReadStart()
 { // Start an asynchronous read and call read_complete when it completes or fails
-    m_port.async_read_some(boost::asio::buffer(*m_ReadBuffer.get()),
+    m_port->async_read_some(boost::asio::buffer(*m_ReadBuffer.get()),
                            std::bind(&CTerminal::ReadComplete,
                                this,
                                std::placeholders::_1,
@@ -110,6 +161,12 @@ void CTerminal::ReadComplete(const boost::system::error_code& error, size_t byte
     }
     else
     {
+        if (error == boost::asio::error::operation_aborted) // if this call is the result of a timer cancel()
+        {
+            LOG_WARN << UART_CLIENT " disconnected from " << m_strPortName;
+            SetupAsync();
+            return; // ignore it because the connection canceled the timer
+        }
         DoClose(error);
     }
 }
@@ -119,7 +176,7 @@ void CTerminal::DoClose(const boost::system::error_code& error)
     if (error == boost::asio::error::operation_aborted) // if this call is the result of a timer cancel()
         return; // ignore it because the connection canceled the timer
 
-    m_port.close();
+    m_port->close();
 
     if (error)
     {
@@ -145,31 +202,37 @@ void CTerminal::DoWrite(PMessage msg)
 //////////////////////////////////////////////////////////////////////////
 void CTerminal::WriteStart(void)
 {
-    m_port.async_write_some(boost::asio::buffer(&m_WriteBuffer.front(), 1),
-                            std::bind(&CTerminal::WriteComplete,
-                                        this,
-                                        std::placeholders::_1));
+    if (bIsOpened)
+    {
+        m_port->async_write_some( boost::asio::buffer( &m_WriteBuffer.front(), 1 ),
+                                  std::bind( &CTerminal::WriteComplete,
+                                             this,
+                                             std::placeholders::_1 ) );
+    }
 }
 //////////////////////////////////////////////////////////////////////////
 void CTerminal::WriteComplete(const boost::system::error_code& error)
 {
-    if (!error)
+    if (bIsOpened)
     {
-        boost::mutex::scoped_lock lock(m_mtx);
-        m_WriteBuffer.pop();  // remove the completed data
-        if (!m_WriteBuffer.empty()) // if there is anything left to be written
+        if (!error)
         {
-            bWriteInProgress = true;
-            WriteStart();          // then start sending the next item in the buffer
+            boost::mutex::scoped_lock lock( m_mtx );
+            m_WriteBuffer.pop();  // remove the completed data
+            if (!m_WriteBuffer.empty()) // if there is anything left to be written
+            {
+                bWriteInProgress = true;
+                WriteStart();          // then start sending the next item in the buffer
+            }
+            else
+            {
+                bWriteInProgress = false;
+            }
         }
         else
         {
-            bWriteInProgress = false;
+            DoClose( error );
         }
-    }
-    else
-    {
-        DoClose(error);
     }
 }
 

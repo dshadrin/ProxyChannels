@@ -58,9 +58,9 @@ void CManagerAdaptor::DoCommand(PMessage msg)
         boost::trim(sCmd);
         boost::to_upper(sCmd);
 
-        if (sCmd == "QUIT")
+        if (sCmd == "QUIT" || sCmd == "EXIT")
         {
-            LOG_WARN << "Get command QUIT";
+            LOG_WARN << "Get command " << sCmd;
             CManager::instance()->Stop();
         }
     }
