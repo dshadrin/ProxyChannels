@@ -11,6 +11,7 @@
 #include <string>
 #include <type_traits>
 #include <limits>
+#include <cassert>
 #include <boost/endian/conversion.hpp>
 
 ///////////////////////////////////////////////////////////////////////////

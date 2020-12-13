@@ -43,22 +43,6 @@
             <prefix>Test</prefix>
             <suffix></suffix>
           </sink>
-        <sink>
-            <channel>4</channel>
-            <name>FILE</name>
-            <template>%Y%m%d_%H%M%S.log</template>
-            <severity>DEBUG</severity>
-            <prefix>SP02</prefix>
-            <suffix>filtered</suffix>
-        </sink>
-        <sink>
-            <channel>5</channel>
-            <name>FILE</name>
-            <template>%Y%m%d_%H%M%S.log</template>
-            <severity>DEBUG</severity>
-            <prefix>SP02</prefix>
-            <suffix>original</suffix>
-        </sink>
       </sinks>
     <client>
       <host>localhost</host>
@@ -79,46 +63,7 @@
       <input_buffer_size>4096</input_buffer_size>
       <protocol>TELNET</protocol>
     </actor>
-    <actor>
-    <id>2</id>
-      <!-- name - predeclares value in actor.h -->
-        <name>TCP-SERVER</name>
-        <port>2005</port>
-        <input_buffer_size>4096</input_buffer_size>
-        <protocol>TELNET</protocol>
-    </actor>
     <!-- this actor used for oscar protocol, oscar protocol used for logger -->
-    <actor>
-      <id>3</id>
-      <name>UART-CLIENT</name>
-      <port>5</port>
-      <port_name>
-        <windows>COM</windows>
-        <!-- for linux can be a several names - /dev/tty, /dev/ttyS, etc - for detail see docs by you linux system -->
-        <!-- by default is /dev/tty -->
-        <linux>/dev/ttyS</linux>
-      </port_name>
-      <input_buffer_size>1024</input_buffer_size>
-      <protocol>STREAM</protocol>
-      <option>
-        <!-- baud_rate - 921600, 460800, 230400, 115200, 57600, 38400, 19200, 14400, 9600, 7200, 4800, 2400, 1800, 1200, 600, 300 -->
-        <!-- by default is 115200 -->
-        <baud_rate>115200</baud_rate>
-        <!-- flow_control - NONE, HARD, SOFT -->
-        <!-- SOFT is XON/XOFF -->
-        <!-- by default is NONE -->
-        <flow_control>NONE</flow_control>
-        <!-- parity - NONE, ODD, EVEN -->
-        <!-- by default is NONE -->
-        <parity>NONE</parity>
-        <!-- parity - 1, 1.5, 2 -->
-        <!-- by default is 1 -->
-        <stop_bits>1</stop_bits>
-        <!-- character_size - 7, 8 -->
-        <!-- by default is 8 -->
-        <character_size>8</character_size>
-      </option>
-    </actor>
     <actor>
       <id>4</id>
       <name>TCP-SERVER</name>
@@ -136,7 +81,7 @@
     <actor>
       <id>6</id>
       <name>UART-CLIENT</name>
-      <port>3</port>
+      <port>5</port>
       <port_name>
         <windows>COM</windows>
         <!-- for linux can be a several names - /dev/tty, /dev/ttyS, etc - for detail see docs by you linux system -->
@@ -175,6 +120,16 @@
       </sinks>
     </actor>
     <actor>
+      <id>9</id>
+      <name>LOGGER-ADAPTOR</name>
+      <protocol>ETFLOG</protocol>
+      <sinks>
+        <sink>
+          <id>3</id>
+        </sink>
+      </sinks>
+    </actor>
+    <actor>
       <id>8</id>
       <name>LOGGER-ADAPTOR</name>
       <protocol>STREAM</protocol>
@@ -191,10 +146,10 @@
             </filter>
           </filters>
         </sink>
-        <sink>
+          <sink>
           <id>2</id>
         </sink>
-        <sink>
+          <sink>
           <id>3</id>
           <filters>
             <filter>
@@ -202,16 +157,6 @@
               <expression>(\x1B\[([0-9]+;)*[0-9]*[m|h|l]{1})</expression>
             </filter>
           </filters>
-        </sink>
-      </sinks>
-    </actor>
-    <actor>
-      <id>9</id>
-      <name>LOGGER-ADAPTOR</name>
-      <protocol>ETFLOG</protocol>
-      <sinks>
-        <sink>
-          <id>3</id>
         </sink>
       </sinks>
     </actor>
@@ -224,37 +169,6 @@
     <actor>
       <id>11</id>
       <name>MANAGER-ADAPTOR</name>
-    </actor>
-    <actor>
-      <id>12</id>
-      <name>LOGGER-ADAPTOR</name>
-      <protocol>STREAM</protocol>
-      <severity>INFO</severity>
-      <!-- tag defines name of data source (module name in logs) -->
-      <tag>SP02</tag>
-      <sinks>
-          <sink>
-          <id>4</id>
-          <filters>
-            <filter>
-              <name>REGEX-ERASE</name>
-              <expression>(\x1B\[([0-9]+;)*[0-9]*[m|h|l]{1})</expression>
-            </filter>
-          </filters>
-        </sink>
-        <sink>
-          <id>5</id>
-        </sink>
-        <sink>
-          <id>3</id>
-          <filters>
-            <filter>
-              <name>REGEX-ERASE</name>
-              <expression>(\x1B\[([0-9]+;)*[0-9]*[m|h|l]{1})</expression>
-            </filter>
-          </filters>
-        </sink>
-      </sinks>
     </actor>
   </actors>
   <channels>
@@ -295,24 +209,6 @@
       <id>7</id>
       <source>11</source>
       <destination>10</destination>
-    </channel>
-    <channel>
-      <!-- id - unique number for channel -->
-      <id>8</id>
-      <!-- source - should be defined in actors section -->
-      <source>2</source>
-      <!-- desination - should be defined in actors section -->
-      <destination>3</destination>
-    </channel>
-    <channel>
-      <id>9</id>
-      <source>3</source>
-      <destination>2</destination>
-    </channel>
-    <channel>
-      <id>10</id>
-      <source>3</source>
-      <destination>12</destination>
     </channel>
   </channels>
 </proxy>

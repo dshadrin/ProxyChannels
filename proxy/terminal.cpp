@@ -111,7 +111,7 @@ void CTerminal::SetupAsync()
 {
     bIsOpened = false;
     bWriteInProgress = false;
-    std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+    boost::this_thread::sleep( boost::chrono::milliseconds( 500 ) );
     if (CManager::instance() != nullptr)
     {
         if (!CManager::instance()->IsStopped())
