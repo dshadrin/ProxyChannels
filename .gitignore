@@ -5,3 +5,5 @@ dist/
 .vs/
 cmake-build-*/
 ssl/
+CMakeLists.txt.user
+

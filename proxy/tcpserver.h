@@ -30,10 +30,10 @@ private:
     boost::asio::ip::tcp::endpoint m_tcpEndpoint;
     boost::asio::ip::tcp::acceptor m_tcpAcceptor;
     std::unique_ptr<boost::asio::ip::tcp::socket> m_socket;
-    std::unique_ptr<boost::thread> m_svrThread;
+    std::unique_ptr<std::thread> m_svrThread;
     size_t m_inClientBuffSize;
 
-    boost::mutex m_mtxTcpServer;
+    std::mutex m_mtxTcpServer;
     std::list<_Client> m_clients;
 
     DECLARE_MODULE_TAG;
@@ -69,7 +69,7 @@ void CTcpServerActor<_Client>::Stop()
     m_tcpAcceptor.close();
     m_socket->close();
 
-    boost::mutex::scoped_lock lock(m_mtxTcpServer);
+    std::unique_lock<std::mutex> lock(m_mtxTcpServer);
     for (typename std::list<_Client>::iterator itClient = m_clients.begin(); itClient != m_clients.end(); )
     {
         LOG_INFO << "Erase client with id = " << itClient->Id();
@@ -85,7 +85,7 @@ void CTcpServerActor<_Client>::Stop()
 template<class _Client>
 void CTcpServerActor<_Client>::EraseClient(size_t id)
 {
-    boost::mutex::scoped_lock lock(m_mtxTcpServer);
+    std::unique_lock<std::mutex> lock(m_mtxTcpServer);
     const auto& it = std::find_if(m_clients.cbegin(), m_clients.cend(), [id](const _Client& client) -> bool
     {
         return client.Id() == id;
@@ -108,7 +108,7 @@ void CTcpServerActor<_Client>::AcceptHandler(const boost::system::error_code &ec
             << m_socket->local_endpoint(err).address().to_string() << ":" << m_socket->local_endpoint(err).port();
 
         const size_t id = GenerateId();
-        boost::mutex::scoped_lock lock(m_mtxTcpServer);
+        std::unique_lock<std::mutex> lock(m_mtxTcpServer);
         m_clients.emplace_back(m_ioService, m_socket.release(), m_inClientBuffSize, id, m_sigInputMessage);
 
         _Client& client = m_clients.back();
@@ -137,8 +137,8 @@ void CTcpServerActor<_Client>::Start()
 template<class _Client>
 size_t CTcpServerActor<_Client>::GenerateId()
 {
-    static boost::mutex mtx;
+    static std::mutex mtx;
     static size_t counter = 0;
-    boost::mutex::scoped_lock lock(mtx);
+    std::unique_lock<std::mutex> lock(mtx);
     return counter++;
 }

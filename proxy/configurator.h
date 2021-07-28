@@ -27,7 +27,7 @@ private:
     std::unique_ptr<bpt::ptree> m_pt;
 
 private:
-    static boost::mutex sConfMtx;
+    static std::mutex sConfMtx;
     static std::unique_ptr<CConfigurator> s_Configurator;
     DECLARE_MODULE_TAG;
 };

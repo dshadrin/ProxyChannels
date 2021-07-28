@@ -1,5 +1,3 @@
-// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
 * Copyright (C) 2018 Rhonda Software.
 * All rights reserved.
@@ -10,6 +8,7 @@
 #include "manager.h"
 #include <iostream>
 #include <iterator>
+#include <chrono>
 #include <boost/property_tree/xml_parser.hpp>
 
 ////////////////////////////////////////////////////////////////////////// 
@@ -48,10 +47,10 @@ boost::property_tree::ptree CLogger::ReadConfiguration()
 
     try
     {
-        boost::filesystem::path cfgname(boost::filesystem::current_path());
+        std::filesystem::path cfgname(std::filesystem::current_path());
         cfgname /= "proxy.xml";
 
-        if (boost::filesystem::exists(cfgname))
+        if (std::filesystem::exists(cfgname))
         {
             boost::property_tree::ptree pt;
             boost::property_tree::xml_parser::read_xml(cfgname.string(), pt);
@@ -76,8 +75,8 @@ void CLogger::Start()
     m_tp = &CManager::instance()->ThreadPool();
     assert(m_tp != nullptr);
     m_continueTimer = true;
-    m_tmJob.tmPoint = boost::chrono::high_resolution_clock::now() + boost::chrono::milliseconds(1500);
-    m_tmJob.tmPeriod = boost::chrono::milliseconds(LOG_OUTPUT_TIMER_PERIOD);
+    m_tmJob.tmPoint = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(1500);
+    m_tmJob.tmPeriod = std::chrono::milliseconds(LOG_OUTPUT_TIMER_PERIOD);
     m_tmJob.callback = std::bind(&CLogger::TimerClockHandler, this);
     m_tp->SetTimer(m_tmJob);
     LOG_WARN << "Logger was started";
@@ -96,23 +95,23 @@ void CLogger::WaitEmptyQueue()
     while (count)
     {
         {
-            boost::mutex::scoped_lock lock(m_queueMutex);
+            std::unique_lock<std::mutex> lock(m_queueMutex);
             count = m_logRecords.size();
         }
         if (count)
         {
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
     }
 }
 
 CLogger* CLogger::Get()
 {
-    static boost::mutex mtx;
+    static std::mutex mtx;
 
     if (!s_Logger)
     {
-        boost::mutex::scoped_lock lock(mtx);
+        std::unique_lock<std::mutex> lock(mtx);
         if (!s_Logger)
         {
             boost::property_tree::ptree pt = CLogger::ReadConfiguration();
@@ -126,7 +125,7 @@ void CLogger::Push(PLog logPackage)
 {
     if (logPackage->lchannel != LOG_UNKNOWN_CHANNEL)
     {
-        boost::mutex::scoped_lock lock(m_queueMutex);
+        std::unique_lock<std::mutex> lock(m_queueMutex);
         m_logRecords.insert(logPackage);
     }
     else
@@ -149,7 +148,7 @@ void CLogger::LogMultiplexer()
         pack->timestamp = TS::GetTimestamp();
         TS::TimestampAdjust(pack->timestamp, -LOG_OUTPUT_DELAY_MS);
 
-        boost::mutex::scoped_lock lock(m_queueMutex);
+        std::unique_lock<std::mutex> lock(m_queueMutex);
         auto it = m_logRecords.upper_bound(pack);
 
         std::shared_ptr<std::vector<PLog>> outRecords(new std::vector<PLog>());

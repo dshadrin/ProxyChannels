@@ -1,7 +1,9 @@
 #pragma once
 
 #include <queue>
-#include <boost/thread.hpp>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <boost/optional.hpp>
 
 //////////////////////////////////////////////////////////////////////////
@@ -20,14 +22,14 @@ public:
 
     void push(const value_type& value)
     {
-        boost::mutex::scoped_lock lock(m_mutex);
+        std::unique_lock<std::mutex> lock(m_mutex);
         m_queue.push(value);
         m_cond.notify_all();
     }
 
     value_type pop()
     {
-        boost::mutex::scoped_lock lock(m_mutex);
+        std::unique_lock<std::mutex> lock(m_mutex);
         while (m_queue.empty())
         {
             m_cond.wait(lock);
@@ -40,10 +42,10 @@ public:
 
     boost::optional<value_type> pop_try(uint64_t timeoutMs)
     {
-        boost::chrono::high_resolution_clock::time_point tpEnd = boost::chrono::high_resolution_clock::now() + boost::chrono::milliseconds(timeoutMs);
-        boost::mutex::scoped_lock lock(m_mutex);
+        std::chrono::high_resolution_clock::time_point tpEnd = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(timeoutMs);
+        std::unique_lock<std::mutex> lock(m_mutex);
         while (m_queue.empty() &&
-               tpEnd > boost::chrono::high_resolution_clock::now())
+               tpEnd > std::chrono::high_resolution_clock::now())
         {
             m_cond.wait_until(lock, tpEnd);
         }
@@ -59,12 +61,12 @@ public:
 
     bool empty()
     {
-        boost::mutex::scoped_lock lock(m_mutex);
+        std::unique_lock<std::mutex> lock(m_mutex);
         return m_queue.empty();
     }
 
 private:
-    boost::mutex m_mutex;
-    boost::condition_variable m_cond;
+    std::mutex m_mutex;
+    std::condition_variable m_cond;
     std::queue<value_type> m_queue;
 };

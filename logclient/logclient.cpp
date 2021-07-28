@@ -5,13 +5,12 @@
 #include "utils/timestamp.h"
 #include <iostream>
 #include <boost/property_tree/xml_parser.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/algorithm/string.hpp>
 #include <ctime>
 
 #ifndef WIN32
 #include <sys/time.h>
-#include <boost/thread.hpp>
 #endif
 
 //////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,3 @@
-// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  * Copyright (C) 2014-2017 Rhonda Software.
  * All rights reserved.
@@ -111,7 +109,7 @@ void CTerminal::SetupAsync()
 {
     bIsOpened = false;
     bWriteInProgress = false;
-    boost::this_thread::sleep( boost::chrono::milliseconds( 500 ) );
+    std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
     if (CManager::instance() != nullptr)
     {
         if (!CManager::instance()->IsStopped())
@@ -186,7 +184,7 @@ void CTerminal::DoClose(const boost::system::error_code& error)
 //////////////////////////////////////////////////////////////////////////
 void CTerminal::DoWrite(PMessage msg)
 {
-    boost::mutex::scoped_lock lock(m_mtx);
+    std::unique_lock<std::mutex> lock(m_mtx);
     boost::algorithm::replace_all(*msg, "\r\n", "\n");
     for (char ch : *msg)
     {
@@ -217,7 +215,7 @@ void CTerminal::WriteComplete(const boost::system::error_code& error)
     {
         if (!error)
         {
-            boost::mutex::scoped_lock lock( m_mtx );
+            std::unique_lock<std::mutex> lock( m_mtx );
             m_WriteBuffer.pop();  // remove the completed data
             if (!m_WriteBuffer.empty()) // if there is anything left to be written
             {

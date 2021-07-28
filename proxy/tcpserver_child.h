@@ -38,7 +38,7 @@ protected:
 
 protected:
     size_t m_id;
-    boost::mutex m_mtxTcpClient;
+    std::mutex m_mtxTcpClient;
     std::queue<PMessage> m_msgQueue;
     boost::asio::io_service& m_ioService;
     std::unique_ptr<boost::asio::ip::tcp::socket> m_socket;

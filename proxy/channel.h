@@ -23,7 +23,7 @@ public:
     void InputMessages(PMessage msg);
 
 private:
-    boost::mutex m_mtx;
+    std::mutex m_mtx;
     size_t m_id;
     std::weak_ptr<CActor> m_source;
     std::weak_ptr<CActor> m_destination;

@@ -7,7 +7,7 @@
 #include "channel.h"
 
 //////////////////////////////////////////////////////////////////////////
-boost::mutex CManager::sManagerMtx;
+std::mutex CManager::sManagerMtx;
 std::unique_ptr<CManager> CManager::s_Manager;
 IMPLEMENT_MODULE_TAG(CManager, "MGR");
 
@@ -37,7 +37,7 @@ void CManager::init()
     if (!s_Manager)
     {
         {
-            boost::lock_guard<boost::mutex> lock(sManagerMtx);
+            std::unique_lock<std::mutex> lock(sManagerMtx);
             if (!s_Manager)
             {
                 CConfigurator::init();
@@ -55,7 +55,7 @@ void CManager::init()
         s_Manager->SetChannels();
 
         // blocks while stop
-        boost::mutex::scoped_lock stopLock(s_Manager->m_stopMtx);
+        std::unique_lock<std::mutex> stopLock(s_Manager->m_stopMtx);
         s_Manager->m_stopCond.wait(stopLock, []() -> bool
         {
             return s_Manager->m_stopFlag;
@@ -73,7 +73,7 @@ void CManager::reset()
         {
             s_Manager->m_ioService.stop();
             // wait finish io_service
-            boost::unique_lock<boost::mutex> lock(s_Manager->m_ioMtx);
+            std::unique_lock<std::mutex> lock(s_Manager->m_ioMtx);
             while (s_Manager->m_ioFlag)
             {
                 s_Manager->m_ioCond.wait(lock);
@@ -82,7 +82,7 @@ void CManager::reset()
 
         // Erase actors
         {
-            boost::mutex::scoped_lock lock(s_Manager->m_actorsMtx);
+            std::unique_lock<std::mutex> lock(s_Manager->m_actorsMtx);
             for (auto& actor : s_Manager->m_actors)
             {
                 actor.second->Stop();
@@ -99,7 +99,7 @@ void CManager::reset()
 
 void CManager::Stop()
 {
-    boost::mutex::scoped_lock lock(m_stopMtx);
+    std::unique_lock<std::mutex> lock(m_stopMtx);
     m_stopFlag = true;
     m_stopCond.notify_all();
 }
@@ -126,7 +126,7 @@ void CManager::AsioServiceWork()
     }
 
     // set flag io_service finished
-    boost::lock_guard<boost::mutex> lock(m_ioMtx);
+    std::unique_lock<std::mutex> lock(m_ioMtx);
     m_ioFlag = false;
     m_ioCond.notify_one();
     LOG_INFO << "Asio: io_service finished";
@@ -146,7 +146,7 @@ void CManager::RunActors()
         {
             if (actorCnf.first == "actor")
             {
-                boost::mutex::scoped_lock lock(m_actorsMtx);
+                std::unique_lock<std::mutex> lock(m_actorsMtx);
                 actorName = actorCnf.second.get<std::string>("name");
                 std::shared_ptr<CActor> actor(CActor::MakeActor(actorCnf.second));
                 if (actor)
@@ -197,7 +197,7 @@ void CManager::SetChannels()
         {
             if (chCnf.first == "channel")
             {
-                boost::mutex::scoped_lock lock(m_actorsMtx);
+                std::unique_lock<std::mutex> lock(m_actorsMtx);
                 channelId = chCnf.second.get<size_t>("id");
                 std::shared_ptr<CChannel> channel = std::make_shared<CChannel>(chCnf.second);
                 if (channel)

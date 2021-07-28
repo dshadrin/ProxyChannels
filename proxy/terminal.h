@@ -45,7 +45,7 @@ private:
     const std::string                       m_strPortName;
     std::unique_ptr<boost::asio::serial_port> m_port;       // the serial m_port this instance is connected to
     std::unique_ptr<std::vector<char>>      m_ReadBuffer;
-    boost::mutex                            m_mtx;
+    std::mutex                            m_mtx;
     std::queue<char>                        m_WriteBuffer;// buffered write data
     bool                                    bWriteInProgress;
     bool                                    bIsOpened;

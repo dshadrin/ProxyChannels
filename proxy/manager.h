@@ -1,8 +1,8 @@
 #pragma once
 
-#include "thread_pool.h"
 #include "logger.h"
 #include "signals.h"
+#include "thread_pool.h"
 #include <boost/asio/io_service.hpp>
 
 //////////////////////////////////////////////////////////////////////////
@@ -31,12 +31,12 @@ private:
     boost::asio::io_service m_ioService;
     bool m_ioFlag;
     bool m_stopFlag;
-    boost::mutex m_ioMtx;
-    boost::condition_variable m_ioCond;
-    boost::mutex m_stopMtx;
-    boost::condition_variable m_stopCond;
+    std::mutex m_ioMtx;
+    std::condition_variable m_ioCond;
+    std::mutex m_stopMtx;
+    std::condition_variable m_stopCond;
 
-    boost::mutex m_actorsMtx;
+    std::mutex m_actorsMtx;
     std::map<size_t, std::shared_ptr<CActor>> m_actors;
     std::map<size_t, std::shared_ptr<CChannel>> m_channels;
 
@@ -46,7 +46,7 @@ private:
     void SetChannels();
 
 private:
-    static boost::mutex sManagerMtx;
+    static std::mutex sManagerMtx;
     static std::unique_ptr<CManager> s_Manager;
     DECLARE_MODULE_TAG;
 };

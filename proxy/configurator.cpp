@@ -5,7 +5,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <iostream>
 
-boost::mutex CConfigurator::sConfMtx;
+std::mutex CConfigurator::sConfMtx;
 std::unique_ptr<CConfigurator> CConfigurator::s_Configurator;
 
 IMPLEMENT_MODULE_TAG(CConfigurator, "CONF");
@@ -13,7 +13,7 @@ IMPLEMENT_MODULE_TAG(CConfigurator, "CONF");
 CConfigurator::CConfigurator(const std::string& xmlPath)
     : m_pt(new bpt::ptree())
 {
-    fs::path cfgname(xmlPath.empty() ? fs::current_path() : xmlPath);
+    fs::path cfgname(xmlPath.empty() ? fs::current_path() : fs::path(xmlPath));
     cfgname /= "proxy.xml";
     if (fs::exists(cfgname))
     {
@@ -37,7 +37,7 @@ void CConfigurator::init(const std::string& xmlPath)
 {
     if (!s_Configurator)
     {
-        boost::lock_guard<boost::mutex> lock(sConfMtx);
+        std::unique_lock<std::mutex> lock(sConfMtx);
         if (!s_Configurator)
         {
             s_Configurator.reset(new CConfigurator(xmlPath));

@@ -3,7 +3,7 @@
 rm -fr build-lnx
 mkdir build-lnx
 cd build-lnx
-cmake .. -G"Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING="Release" -DBUILD_STATIC:BOOL=ON
+cmake .. -G"Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING="Release" -DBUILD_STATIC:BOOL=ON -DUNIX=ON
 cd ../
 
 #rm -fr build-test

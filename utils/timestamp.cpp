@@ -1,7 +1,9 @@
 // This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 #include "timestamp.h"
-#include <boost/thread.hpp>
+#include <thread>
+#include <mutex>
+#include <cstring>
 
 //////////////////////////////////////////////////////////////////////////
 const long ONE_SECOND_IN_MICROSECONDS = 1000000l;
@@ -35,9 +37,9 @@ void TS::ConvertTimestamp(timespec tv, tm* tmStruct, long* us, long deltaFromNow
 #ifdef WIN32
     localtime_s(tmStruct, &tv.tv_sec);
 #else
-    static boost::mutex mtx;
+    static std::mutex mtx;
     {
-        boost::mutex::scoped_lock lock(mtx);
+        std::unique_lock<std::mutex> lock(mtx);
         memcpy(tmStruct, localtime(&tv.tv_sec), sizeof(struct tm));
     }
 #endif

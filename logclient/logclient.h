@@ -4,7 +4,7 @@
 #include "utils/logbuilder.h"
 #include "oscar/flap_builder.h"
 #include <boost/asio.hpp>
-#include <boost/thread.hpp>
+#include <thread>
 #include <boost/noncopyable.hpp>
 #include <boost/property_tree/ptree.hpp>
 

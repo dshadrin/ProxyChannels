@@ -49,7 +49,7 @@ void CChannel::Disconnect()
 
 void CChannel::InputMessages(PMessage msg)
 {
-    boost::mutex::scoped_lock lock(m_mtx);
+    std::unique_lock<std::mutex> lock(m_mtx);
     if (!m_destination.expired())
     {
         auto dst = m_destination.lock();

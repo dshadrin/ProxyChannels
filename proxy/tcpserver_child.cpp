@@ -35,7 +35,7 @@ CTcpServerChild::~CTcpServerChild()
 //////////////////////////////////////////////////////////////////////////
 void CTcpServerChild::SendMessage(PMessage msg)
 {
-    boost::mutex::scoped_lock lock(m_mtxTcpClient);
+    std::unique_lock<std::mutex> lock(m_mtxTcpClient);
     if (!m_idleWrite)
     {
         m_msgQueue.push(msg);
@@ -62,7 +62,7 @@ void CTcpServerChild::WriteHandler(const boost::system::error_code &ec, std::siz
 {
     if (!ec)
     {
-        boost::mutex::scoped_lock lock(m_mtxTcpClient);
+        std::unique_lock<std::mutex> lock(m_mtxTcpClient);
         if (bytesTransferred < m_outBuffer.size())
         {
             m_outBuffer.erase(m_outBuffer.begin(), m_outBuffer.begin() + bytesTransferred);

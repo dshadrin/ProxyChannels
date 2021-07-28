@@ -31,7 +31,7 @@ private:
 
 private:
     thread_pool* m_tp;
-    boost::mutex m_queueMutex;
+    std::mutex m_queueMutex;
     std::multiset<PLog, CCompareLogPackages> m_logRecords;
     std::vector<std::shared_ptr<CSink>> m_sinks;
 

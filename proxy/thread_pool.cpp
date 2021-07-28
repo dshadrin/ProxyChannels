@@ -7,6 +7,7 @@
 
 #include "stdinc.h"
 #include "thread_pool.h"
+#include <boost/thread.hpp>
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -14,9 +15,10 @@
 IMPLEMENT_MODULE_TAG(thread_pool, "POOL");
 
 //////////////////////////////////////////////////////////////////////////
-thread_pool::thread_pool()
-    : available_threads(boost::thread::hardware_concurrency())
-    , tp_stop(false)
+thread_pool::thread_pool() :
+    wt_group(new boost::thread_group),
+    available_threads(boost::thread::hardware_concurrency()),
+    tp_stop(false)
 {
     if (available_threads == 0)
     {
@@ -37,8 +39,8 @@ thread_pool::~thread_pool()
     }
 
     wt_cond.notify_all();
-    wt_group.interrupt_all();
-    wt_group.join_all();
+    wt_group->interrupt_all();
+    wt_group->join_all();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -50,18 +52,18 @@ void thread_pool::timer_thread()
     {
         while ( !tp_stop )
         {
-            boost::chrono::high_resolution_clock::time_point tm_point;
+            std::chrono::high_resolution_clock::time_point tm_point;
 
             if (timer_jobs_queue.empty())
             {
-                tm_point = boost::chrono::high_resolution_clock::now() + boost::chrono::seconds(3600);
+                tm_point = std::chrono::high_resolution_clock::now() + std::chrono::seconds(3600);
             }
             else
             {
                 tm_point = timer_jobs_queue.front().tmPoint;
             }
 
-            boost::unique_lock<boost::mutex> lock(tj_mtx);
+            std::unique_lock<std::mutex> lock(tj_mtx);
             tj_cond.wait_until(lock, tm_point, [this](){ return tp_stop || !tj_queue.empty(); });
 
             if (tp_stop)
@@ -69,7 +71,7 @@ void thread_pool::timer_thread()
                 continue;
             }
 
-            tm_point = boost::chrono::high_resolution_clock::now();
+            tm_point = std::chrono::high_resolution_clock::now();
             if (!tj_queue.empty())
             {
                 timer_job tj = tj_queue.front();
@@ -80,7 +82,7 @@ void thread_pool::timer_thread()
                     {
                         timer_jobs_queue.push_back(tj);
                     }
-                    else if (tj.tmPeriod != boost::chrono::microseconds::zero())
+                    else if (tj.tmPeriod != std::chrono::microseconds::zero())
                     {
                         tj.tmPoint += tj.tmPeriod;
                         if (tj.tmPoint > tm_point)
@@ -101,7 +103,7 @@ void thread_pool::timer_thread()
             {
                 timer_job tj = timer_jobs_queue.front();
                 timer_jobs_queue.pop_front();
-                if ( tj.callback() && tj.tmPeriod != boost::chrono::microseconds::zero() )
+                if ( tj.callback() && tj.tmPeriod != std::chrono::microseconds::zero() )
                 {
                     do { tj.tmPoint += tj.tmPeriod; } while (tj.tmPoint <= tm_point);
                     timer_jobs_queue.push_back(tj);
@@ -121,10 +123,10 @@ void thread_pool::SetTimer(const timer_job& tj)
 {
     if (!ptj_thread)
     {
-        ptj_thread.reset(new boost::thread(std::bind(&thread_pool::timer_thread, this)));
+        ptj_thread.reset(new std::thread(std::bind(&thread_pool::timer_thread, this)));
     }
 
-    boost::lock_guard<boost::mutex> lock(tj_mtx);
+    std::unique_lock<std::mutex> lock(tj_mtx);
     tj_queue.push(tj);
     tj_cond.notify_one();
 }
@@ -133,15 +135,15 @@ void thread_pool::SetTimer(const timer_job& tj)
 void thread_pool::SetWorkUnit(std::function<void()> wu, bool isLongWorkedThread)
 {
     {
-        boost::lock_guard<boost::mutex> lock(wt_mtx);
+        std::unique_lock<std::mutex> lock(wt_mtx);
 
         if (isLongWorkedThread)
         {
-            wt_group.create_thread(std::bind(&thread_pool::work_thread, this));
+            wt_group->create_thread(std::bind(&thread_pool::work_thread, this));
         }
         else if (available_threads > 0 && wt_queue.size() > 0)
         {
-            wt_group.create_thread(std::bind(&thread_pool::work_thread, this));
+            wt_group->create_thread(std::bind(&thread_pool::work_thread, this));
             --available_threads;
         }
 
@@ -160,7 +162,7 @@ void thread_pool::work_thread()
             std::function<void()> work_unit;
 
             {
-                boost::unique_lock<boost::mutex> lock(wt_mtx);
+                std::unique_lock<std::mutex> lock(wt_mtx);
                 wt_cond.wait(lock, [this](){ return tp_stop || !wt_queue.empty(); });
 
                 if ( tp_stop )

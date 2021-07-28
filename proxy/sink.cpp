@@ -15,8 +15,8 @@
 // Factory method
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_MODULE_TAG(CSink, "SINK");
-boost::condition_variable CSink::m_jobCond;
-boost::mutex CSink::m_jobMutex;
+std::condition_variable CSink::m_jobCond;
+std::mutex CSink::m_jobMutex;
 std::atomic_uint_fast64_t CSink::m_jobCounter(0);
 
 CSink* CSink::MakeSink(const std::string& name, const boost::property_tree::ptree& pt)
@@ -47,8 +47,8 @@ void CSink::SetProperty(const std::string& name, const std::string& value)
 
 bool CSink::WaitJobFinishAllSinks(uint32_t ms)
 {
-    boost::chrono::high_resolution_clock::time_point tmEnd = boost::chrono::high_resolution_clock::now() + boost::chrono::microseconds(ms);
-    boost::mutex::scoped_lock jobLock(m_jobMutex);
+    std::chrono::high_resolution_clock::time_point tmEnd = std::chrono::high_resolution_clock::now() + std::chrono::microseconds(ms);
+    std::unique_lock<std::mutex> jobLock(m_jobMutex);
 
     m_jobCond.wait_until(jobLock, tmEnd, []() { return m_jobCounter.load() == 0; });
 
@@ -134,7 +134,7 @@ void CFileSink::CreateFileName()
     buffer.resize(100);
     size_t sz = strftime(&buffer[0], 100, m_fileNameTemplate.c_str(), &tmStruct);
     buffer.resize(sz);
-    boost::filesystem::path path(buffer);
+    fs::path path(buffer);
     std::string fName = path.stem().string();
     if (!m_prefix.empty())
     {

@@ -36,20 +36,21 @@
 #include <list>
 #include <map>
 #include <sstream>
+#include <thread>
+#include <chrono>
+#include <mutex>
+#include <condition_variable>
+#include <filesystem>
 
 #include <boost/noncopyable.hpp>
 #include <boost/operators.hpp>
-#include <boost/chrono.hpp>
 #include <boost/stacktrace.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string_regex.hpp>
-#include <boost/thread.hpp>
-#include <boost/chrono.hpp>
 #include <boost/signals2.hpp>
 #include <boost/function.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 //////////////////////////////////////////////////////////////////////////
 struct SLogPackage;

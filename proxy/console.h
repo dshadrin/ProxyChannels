@@ -35,7 +35,7 @@ private:
     boost::asio::streambuf m_inBuffer;
 #elif defined WIN32
     size_t m_delayNs;
-    boost::asio::basic_waitable_timer<boost::chrono::steady_clock> m_steadyTimer;
+    boost::asio::basic_waitable_timer<std::chrono::steady_clock> m_steadyTimer;
 #endif
 
     DECLARE_MODULE_TAG;

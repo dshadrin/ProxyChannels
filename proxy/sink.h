@@ -36,8 +36,8 @@ protected:
     ESeverity m_severity;
     int8_t m_channel;
     DECLARE_MODULE_TAG;
-    static boost::condition_variable m_jobCond;
-    static boost::mutex m_jobMutex;
+    static std::condition_variable m_jobCond;
+    static std::mutex m_jobMutex;
     static std::atomic_uint_fast64_t m_jobCounter;
 };
 
