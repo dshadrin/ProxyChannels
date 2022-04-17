@@ -16,6 +16,10 @@ else()
   target_compile_definitions(proxy PRIVATE PROXY_EXPORTS)
 endif()
 
+if(MSVC)
+  set_property(TARGET proxy PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 target_compile_definitions(proxy PRIVATE LOGGING_DIRECT)
 target_include_directories(proxy PUBLIC ${ProjectDir})
 

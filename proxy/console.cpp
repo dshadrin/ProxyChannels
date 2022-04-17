@@ -21,7 +21,7 @@ CConsoleActor::CConsoleActor(boost::property_tree::ptree& pt) :
     m_inBuffer(MAX_BODY_LENGTH)
 #elif defined WIN32
     m_delayNs( pt.get<uint32_t>( "timer-delay", 100 ) * 1000 * 1000 ),
-    m_steadyTimer(m_ioService, boost::chrono::nanoseconds( m_delayNs ))
+    m_steadyTimer(m_ioService, std::chrono::nanoseconds( m_delayNs ))
 #endif
 {
     LOG_DEBUG << "ID is " << pt.get<size_t>( "id" );
@@ -87,7 +87,7 @@ void CConsoleActor::Start()
                                               boost::asio::placeholders::error,
                                               boost::asio::placeholders::bytes_transferred));
 #elif defined WIN32
-    m_steadyTimer.expires_from_now( boost::chrono::nanoseconds( m_delayNs ) );
+    m_steadyTimer.expires_from_now( std::chrono::nanoseconds( m_delayNs ) );
     m_steadyTimer.async_wait( boost::bind( &CConsoleActor::ReadHandler, this, boost::asio::placeholders::error, 0 ) );
 #endif
 }

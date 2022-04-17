@@ -14,3 +14,7 @@ endif(UNIX)
 if(STATIC_PROXY)
   target_compile_definitions(utils PUBLIC LOGGING_DIRECT)
 endif()
+
+if(MSVC)
+  set_property(TARGET utils PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()

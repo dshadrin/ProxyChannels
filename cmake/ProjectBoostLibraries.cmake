@@ -3,7 +3,8 @@
 ###
 if(MSVC)
   set(Boost_USE_STATIC_LIBS ON)
-#  set(Boost_COMPILER "vc142")
+  set(Boost_USE_STATIC_RUNTIME ON)
+  set(Boost_COMPILER "vc140")
 elseif(MINGW)
   set(Boost_USE_STATIC_LIBS ON)
   add_definitions(-DBOOST_ALLOW_DEPRECATED_HEADERS)
@@ -13,7 +14,7 @@ elseif(UNIX)
   set(Boost_NO_BOOST_CMAKE ON)
 endif()
 set(Boost_USE_MULTITHREADED ON)
-set(Boost_ARCHITECTURE "-x64")
+#set(Boost_ARCHITECTURE "-x64")
 #set(Boost_DEBUG ON)
 
 set(BOOST_LIB_LIST
@@ -25,7 +26,7 @@ set(BOOST_LIB_LIST
 #  chrono
 )
 
-find_package(Boost 1.69 COMPONENTS ${BOOST_LIB_LIST} REQUIRED)
+find_package(Boost 1.78 COMPONENTS ${BOOST_LIB_LIST} REQUIRED)
 message(STATUS "Boost INCLUDES: ${Boost_INCLUDE_DIRS}")
 include_directories(${Boost_INCLUDE_DIRS})
 message(STATUS "Boost LIBRARIES: ${Boost_LIBRARIES}")

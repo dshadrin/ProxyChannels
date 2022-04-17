@@ -15,3 +15,7 @@ endif(UNIX)
 if(MINGW)
   target_link_libraries(logclient ws2_32)    
 endif()
+
+if(MSVC)
+  set_property(TARGET logclient PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()

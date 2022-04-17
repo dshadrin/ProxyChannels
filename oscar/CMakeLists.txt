@@ -9,3 +9,8 @@ add_library( oscar STATIC ${oscar_SRC} ${oscar_INC} )
 if(UNIX)
   target_compile_options(oscar PUBLIC -fPIC)
 endif(UNIX)
+
+if(MSVC)
+  set_property(TARGET oscar PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+  
