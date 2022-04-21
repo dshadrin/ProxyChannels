@@ -182,14 +182,14 @@ void CLogger::CreateSinks(const boost::property_tree::ptree& pt)
     {
         if (sink.first == "sink")
         {
-            std::string sinkName = sink.second.get<std::string>("name", "");
-            if (!sinkName.empty())
+            std::string sinkType = sink.second.get<std::string>("type", "");
+            if (!sinkType.empty())
             {
-                CSink* ptr = CSink::MakeSink(sinkName, sink.second);
+                CSink* ptr = CSink::MakeSink( sinkType, sink.second);
                 if (ptr)
                 {
                     m_sinks.emplace_back(ptr);
-                    std::cout << "Created " << sinkName << " sink." << std::endl;
+                    std::cout << "Created " << sinkType << std::endl;
                 }
             }
         }

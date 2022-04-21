@@ -8,12 +8,11 @@
 #include "utils/logbuilder.h"
 #include <set>
 #include <fstream>
-#include <boost/noncopyable.hpp>
+#include <boost/describe.hpp>
 #include <atomic>
 
 //////////////////////////////////////////////////////////////////////////
-#define CONSOLE_SINK "CONSOLE"
-#define FILE_SINK "FILE"
+BOOST_DEFINE_ENUM_CLASS( ESinkType, UNKNOWN_SINK, CONSOLE_SINK, FILE_SINK );
 
 //////////////////////////////////////////////////////////////////////////
 class CSink
@@ -22,7 +21,7 @@ public:
     CSink() = default;
     virtual ~CSink() = default;
 
-    static CSink* MakeSink(const std::string& name, const boost::property_tree::ptree& pt);
+    static CSink* MakeSink(const std::string& type, const boost::property_tree::ptree& pt);
 
     virtual void SetProperty(const std::string& name, const std::string& value);
     virtual void Write(std::shared_ptr<std::vector<PLog>> logData) = 0;

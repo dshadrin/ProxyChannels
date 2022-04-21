@@ -18,7 +18,7 @@ public:
 
     void Start(void) override;
     void Stop(void) override;
-    std::string GetName() const override { return MANAGER_ADAPTOR; }
+    std::string GetName() const override { return ConvertId2String<EActorType>( EActorType::MANAGER_ADAPTOR ); }
 
 private:
     void DoCommand(PMessage msg);

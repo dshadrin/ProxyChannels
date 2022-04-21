@@ -6,7 +6,7 @@
 
 CEtfLoggerAdaptor::CEtfLoggerAdaptor(boost::property_tree::ptree& pt) :
     CLogAdaptor(pt),
-    m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", PROTO_ETFLOG)))
+    m_protocol( ConvertProtocolName2Id( pt.get<std::string>( "protocol", "PROTO_ETFLOG" ) ) )
 {
     m_sigOutputMessage.connect(std::bind(&CEtfLoggerAdaptor::DoLog, this, std::placeholders::_1));
 }
@@ -23,12 +23,12 @@ void CEtfLoggerAdaptor::Stop()
 
 std::string CEtfLoggerAdaptor::GetName() const
 {
-    return LOGGER_ADAPTOR;
+    return ConvertId2String<EActorType>( EActorType::LOGGER_ADAPTOR );
 }
 
 void CEtfLoggerAdaptor::DoLog(PMessage msg)
 {
-    if (m_protocol == ENetProtocol::eEtfLog)
+    if (m_protocol == ENetProtocol::ETFLOG)
     {
         SLogPackage logPackage;
         SEtfLogHeader* logHeader = reinterpret_cast<SEtfLogHeader*>(&(*msg.get())[0]);

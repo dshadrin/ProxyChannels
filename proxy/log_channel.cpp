@@ -7,6 +7,7 @@
 #include "log_channel.h"
 #include "logger.h"
 #include <boost/algorithm/string_regex.hpp>
+#include <iostream>
 
 //////////////////////////////////////////////////////////////////////////
 DEFINE_MODULE_TAG("LCNL");
@@ -25,6 +26,8 @@ CLogChannel::CLogChannel(boost::property_tree::ptree& pt) :
                 if (pt_filter.first == "filter")
                 {
                     std::string name = pt_filter.second.get<std::string>("name", "");
+                    boost::algorithm::to_upper( name );
+                    boost::algorithm::trim( name );
                     if (!name.empty())
                     {
                         std::shared_ptr<CFilter> filter(CFilter::MakeFilter(name, pt_filter.second));
@@ -68,9 +71,21 @@ void CLogChannel::TransferLogMessage(const SLogPackage& msg)
 //////////////////////////////////////////////////////////////////////////
 CFilter* CFilter::MakeFilter(const std::string& nameFilter, boost::property_tree::ptree& pt)
 {
-    if (nameFilter == RAGEX_ERASE)
-        return new CRegexEraseFilter(pt);
+    try
+    {
+        ERegexFilter filter = ConvertString2Id<ERegexFilter>( nameFilter );
 
+        switch (filter)
+        {
+        case ERegexFilter::RAGEX_ERASE:
+            return new CRegexEraseFilter( pt );
+        default:;
+        }
+    }
+    catch (std::exception& e)
+    {
+        std::cout << "Error create sink filter: " << e.what();
+    }
     return nullptr;
 }
 

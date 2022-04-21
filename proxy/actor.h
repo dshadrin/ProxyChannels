@@ -1,29 +1,11 @@
 #pragma once
+#include <boost/describe.hpp>
 
 //////////////////////////////////////////////////////////////////////////
-#define NO_NAME "NO_NAME"
-#define TCP_SERVER "TCP-SERVER"
-#define UART_CLIENT "UART-CLIENT"
-#define LOGGER_ADAPTOR "LOGGER-ADAPTOR"
-#define CONSOLE "CONSOLE"
-#define MANAGER_ADAPTOR "MANAGER-ADAPTOR"
-
-#define NO_PROTO "NO_PROTO"
-#define PROTO_OSCAR "OSCAR"
-#define PROTO_STREAM "STREAM"
-#define PROTO_TELNET "TELNET"
-#define PROTO_ETFLOG "ETFLOG"
+BOOST_DEFINE_ENUM_CLASS( EActorType, NO_NAME, TCP_SERVER, UART_CLIENT, LOGGER_ADAPTOR, CONSOLE_SERVER, MANAGER_ADAPTOR );
+BOOST_DEFINE_ENUM_CLASS( ENetProtocol, NO_PROTO, OSCAR, STREAM, TELNET, ETFLOG );
 
 //////////////////////////////////////////////////////////////////////////
-enum class ENetProtocol : uint8_t
-{
-    eOscar,
-    // insert new protocols before this line
-    eStream,
-    eTelnet,
-    eEtfLog
-};
-
 #pragma pack( push, 1 )
 struct SEtfLogHeader
 {
@@ -35,6 +17,23 @@ struct SEtfLogHeader
 };
 #pragma pack( pop )
 const size_t ETF_LOG_HEADER_SIZE = sizeof(SEtfLogHeader);
+
+template<class _Enum>
+std::string ConvertId2String( _Enum id )
+{
+    char name[64]{};
+    return boost::describe::enum_to_string<_Enum>( id, &name[0] );;
+}
+
+template<class _Enum>
+_Enum ConvertString2Id( const std::string& str )
+{
+    _Enum id;
+    std::string s = boost::algorithm::to_upper_copy( str );
+    boost::algorithm::trim( s );
+    boost::describe::enum_from_string<_Enum>( s.c_str(), id );
+    return id;
+}
 
 ENetProtocol ConvertProtocolName2Id(const std::string& pName);
 std::string ConvertId2ProtocolName(ENetProtocol pId);

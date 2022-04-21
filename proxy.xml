@@ -7,12 +7,12 @@
       <sinks>
         <sink>
             <channel>0</channel>
-            <name>CONSOLE</name>
+            <type>CONSOLE_SINK</type>
             <severity>INFO</severity>
         </sink>
         <sink>
             <channel>0</channel>
-            <name>FILE</name>
+            <type>FILE_SINK</type>
             <template>%Y%m%d_%H%M%S.log</template>
             <severity>DEBUG</severity>
             <prefix>Monitor</prefix>
@@ -20,7 +20,7 @@
         </sink>
         <sink>
             <channel>1</channel>
-            <name>FILE</name>
+            <type>FILE_SINK</type>
             <template>%Y%m%d_%H%M%S.log</template>
             <severity>DEBUG</severity>
             <prefix>SP01</prefix>
@@ -28,7 +28,7 @@
         </sink>
         <sink>
             <channel>2</channel>
-            <name>FILE</name>
+            <type>FILE_SINK</type>
             <template>%Y%m%d_%H%M%S.log</template>
             <severity>DEBUG</severity>
             <prefix>SP01</prefix>
@@ -36,7 +36,7 @@
         </sink>
         <sink>
             <channel>3</channel>
-            <name>FILE</name>
+            <type>FILE_SINK</type>
             <open_by_demand>true</open_by_demand>
             <template>%Y%m%d_%H%M%S.log</template>
             <severity>DEBUG</severity>
@@ -45,7 +45,7 @@
           </sink>
         <sink>
             <channel>4</channel>
-            <name>FILE</name>
+            <type>FILE_SINK</type>
             <template>%Y%m%d_%H%M%S.log</template>
             <severity>DEBUG</severity>
             <prefix>SP02</prefix>
@@ -53,7 +53,7 @@
         </sink>
         <sink>
             <channel>5</channel>
-            <name>FILE</name>
+            <type>FILE_SINK</type>
             <template>%Y%m%d_%H%M%S.log</template>
             <severity>DEBUG</severity>
             <prefix>SP02</prefix>
@@ -74,14 +74,14 @@
       <!-- id - unique string for actors -->
       <id>TELNET-2002</id>
       <!-- name - predeclares value in actor.h -->
-      <name>TCP-SERVER</name>
+      <name>TCP_SERVER</name>
       <port>2002</port>
       <input_buffer_size>4096</input_buffer_size>
       <protocol>TELNET</protocol>
     </actor>
     <actor>
       <id>UART0</id>
-      <name>UART-CLIENT</name>
+      <name>UART_CLIENT</name>
       <port>3</port>
       <port_name>
         <windows>COM</windows>
@@ -112,7 +112,7 @@
     </actor>
     <actor>
         <id>UART0-LOGGER-ADAPTOR</id>
-        <name>LOGGER-ADAPTOR</name>
+        <name>LOGGER_ADAPTOR</name>
         <protocol>STREAM</protocol>
         <severity>INFO</severity>
         <!-- tag defines name of data source (module name in logs) -->
@@ -122,7 +122,7 @@
                 <id>1</id>
                 <filters>
                     <filter>
-                        <name>REGEX-ERASE</name>
+                        <name>REGEX_ERASE</name>
                         <expression>(\x1B\[([0-9]+;)*[0-9]*[m|h|l]{1})</expression>
                     </filter>
                 </filters>
@@ -134,7 +134,7 @@
                 <id>3</id>
                 <filters>
                     <filter>
-                        <name>REGEX-ERASE</name>
+                        <name>REGEX_ERASE</name>
                         <expression>(\x1B\[([0-9]+;)*[0-9]*[m|h|l]{1})</expression>
                     </filter>
                 </filters>
@@ -145,14 +145,14 @@
     <actor>
         <id>TELNET-2005</id>
         <!-- name - predeclares value in actor.h -->
-        <name>TCP-SERVER</name>
+        <name>TCP_SERVER</name>
         <port>2005</port>
         <input_buffer_size>4096</input_buffer_size>
         <protocol>TELNET</protocol>
     </actor>
     <actor>
       <id>UART1</id>
-      <name>UART-CLIENT</name>
+      <name>UART_CLIENT</name>
       <port>5</port>
       <port_name>
         <windows>COM</windows>
@@ -170,7 +170,7 @@
     </actor>
     <actor>
         <id>UART1-LOGGER-ADAPTOR</id>
-        <name>LOGGER-ADAPTOR</name>
+        <name>LOGGER_ADAPTOR</name>
         <protocol>STREAM</protocol>
         <severity>INFO</severity>
         <!-- tag defines name of data source (module name in logs) -->
@@ -180,7 +180,7 @@
                 <id>4</id>
                 <filters>
                     <filter>
-                        <name>REGEX-ERASE</name>
+                        <name>REGEX_ERASE</name>
                         <expression>(\x1B\[([0-9]+;)*[0-9]*[m|h|l]{1})</expression>
                     </filter>
                 </filters>
@@ -192,7 +192,7 @@
                 <id>3</id>
                 <filters>
                     <filter>
-                        <name>REGEX-ERASE</name>
+                        <name>REGEX_ERASE</name>
                         <expression>(\x1B\[([0-9]+;)*[0-9]*[m|h|l]{1})</expression>
                     </filter>
                 </filters>
@@ -202,13 +202,13 @@
 
     <actor>
       <id>CMD-CONSOLE</id>
-      <name>CONSOLE</name>
+      <name>CONSOLE_SERVER</name>
       <protocol>TELNET</protocol>
       <timer-delay>100</timer-delay>
     </actor>
     <actor>
       <id>CMD-MANAGER</id>
-      <name>MANAGER-ADAPTOR</name>
+      <name>MANAGER_ADAPTOR</name>
     </actor>
   </actors>
   <channels>
@@ -263,14 +263,14 @@
         <actors>
             <actor>
                 <id>ETFLOG</id>
-                <name>TCP-SERVER</name>
+                <name>TCP_SERVER</name>
                 <port>2003</port>
                 <input_buffer_size>12</input_buffer_size>
                 <protocol>ETFLOG</protocol>
             </actor>
             <actor>
                 <id>ETF-LOGGER-ADAPTOR</id>
-                <name>LOGGER-ADAPTOR</name>
+                <name>LOGGER_ADAPTOR</name>
                 <protocol>ETFLOG</protocol>
                 <sinks>
                     <sink>
@@ -280,14 +280,14 @@
             </actor>
             <actor>
                 <id>OSCARLOG</id>
-                <name>TCP-SERVER</name>
+                <name>TCP_SERVER</name>
                 <port>2100</port>
                 <input_buffer_size>6</input_buffer_size>
                 <protocol>OSCAR</protocol>
             </actor>
             <actor>
                 <id>OSCAR-LOG-ADAPTER</id>
-                <name>LOGGER-ADAPTOR</name>
+                <name>LOGGER_ADAPTOR</name>
                 <protocol>OSCAR</protocol>
                 <sinks>
                     <sink>

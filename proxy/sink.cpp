@@ -1,5 +1,3 @@
-// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
 * Copyright (C) 2018 Rhonda Software.
 * All rights reserved.
@@ -8,6 +6,7 @@
 #include "stdinc.h"
 #include "sink.h"
 #include "manager.h"
+#include "actor.h"
 #include "thread_pool.h"
 #include <iostream>
 
@@ -19,17 +18,24 @@ std::condition_variable CSink::m_jobCond;
 std::mutex CSink::m_jobMutex;
 std::atomic_uint_fast64_t CSink::m_jobCounter(0);
 
-CSink* CSink::MakeSink(const std::string& name, const boost::property_tree::ptree& pt)
+CSink* CSink::MakeSink(const std::string& type, const boost::property_tree::ptree& pt)
 {
-    std::string sinkName = boost::algorithm::to_upper_copy(name);
-    boost::algorithm::trim(sinkName);
+    try
+    {
+        ESinkType sType = ConvertString2Id<ESinkType>( type );
 
-    if (sinkName == CONSOLE_SINK)
-        return new CConsoleSink(pt);
-
-    else if (sinkName == FILE_SINK)
-        return new CFileSink(pt);
-
+        switch (sType)
+        {
+        case ESinkType::FILE_SINK:
+            return new CFileSink( pt );
+        case ESinkType::CONSOLE_SINK:
+            return new CConsoleSink( pt );
+        }
+    }
+    catch (std::exception& e)
+    {
+        std::cout << "Error create sink: " << e.what();
+    }
     return nullptr;
 }
 

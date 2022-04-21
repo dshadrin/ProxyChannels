@@ -9,7 +9,7 @@ extern void DirectSendToLogger(PLog logPackage);
 
 CStreamLoggerAdaptor::CStreamLoggerAdaptor(boost::property_tree::ptree& pt) :
     CLogAdaptor(pt),
-    m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", PROTO_STREAM))),
+    m_protocol( ConvertProtocolName2Id( pt.get<std::string>( "protocol", "PROTO_STREAM" ) ) ),
     m_package{ "", 
                pt.get<std::string>("tag", ""),
                {0, 0}, ELogCommand::eMessage,
@@ -31,12 +31,12 @@ void CStreamLoggerAdaptor::Stop()
 
 std::string CStreamLoggerAdaptor::GetName() const
 {
-    return LOGGER_ADAPTOR;
+    return ConvertId2String<EActorType>( EActorType::LOGGER_ADAPTOR );
 }
 
 void CStreamLoggerAdaptor::DoLog(PMessage msg)
 {
-    if (m_protocol == ENetProtocol::eStream)
+    if (m_protocol == ENetProtocol::STREAM)
     {
         timespec timestamp = TS::GetTimestamp();
         std::string::size_type pos = 0;

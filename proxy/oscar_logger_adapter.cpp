@@ -7,7 +7,7 @@
 
 COscarLoggerAdaptor::COscarLoggerAdaptor(boost::property_tree::ptree& pt) :
     CLogAdaptor(pt),
-    m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", PROTO_OSCAR)))
+    m_protocol( ConvertProtocolName2Id( pt.get<std::string>( "protocol", "PROTO_OSCAR" ) ) )
 {
     m_sigOutputMessage.connect(std::bind(&COscarLoggerAdaptor::DoLog, this, std::placeholders::_1));
 }
@@ -24,12 +24,12 @@ void COscarLoggerAdaptor::Stop()
 
 std::string COscarLoggerAdaptor::GetName() const
 {
-    return LOGGER_ADAPTOR;
+    return ConvertId2String<EActorType>( EActorType::LOGGER_ADAPTOR );
 }
 
 void COscarLoggerAdaptor::DoLog(PMessage msg)
 {
-    if (m_protocol == ENetProtocol::eOscar)
+    if (m_protocol == ENetProtocol::OSCAR)
     {
         SLogPackage logPackage;
         oscar::ostd::flap_parser fp(*msg.get());

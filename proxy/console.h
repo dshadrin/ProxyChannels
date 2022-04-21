@@ -21,7 +21,7 @@ public:
 
     void Start() override;
     void Stop() override;
-    std::string GetName() const override { return CONSOLE; }
+    std::string GetName() const override { return ConvertId2String<EActorType>( EActorType::CONSOLE_SERVER ); }
 
 private:
     void ReadHandler(const boost::system::error_code &ec, std::size_t bytesTransferred);

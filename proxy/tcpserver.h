@@ -47,7 +47,7 @@ template<class _Client>
 CTcpServerActor<_Client>::CTcpServerActor(boost::property_tree::ptree& pt) :
     CActor(pt.get<std::string>("name"), pt.get<std::string>("id")),
     m_port(pt.get<uint16_t>("port", 23)),
-    m_protocol(ConvertProtocolName2Id(pt.get<std::string>("protocol", PROTO_TELNET))),
+    m_protocol( ConvertProtocolName2Id( pt.get<std::string>( "protocol", "PROTO_TELNET" ) ) ),
     m_ioService(CManager::instance()->IoService()),
     m_tcpEndpoint{ boost::asio::ip::tcp::v4(), m_port },
     m_tcpAcceptor{ m_ioService, m_tcpEndpoint },

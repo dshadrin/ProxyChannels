@@ -53,7 +53,7 @@ bool CTerminal::Setup()
                 {
                     std::string valueStr;
                     std::ostringstream oss;
-                    oss << UART_CLIENT " connected on " << m_strPortName << std::endl;
+                    oss << "UART_CLIENT connected on " << m_strPortName << std::endl;
 
                     unsigned int baud = m_pt.get<unsigned int>( "option.baud_rate", 115200 );
                     boost::asio::serial_port_base::baud_rate baud_option( baud );
@@ -161,7 +161,7 @@ void CTerminal::ReadComplete(const boost::system::error_code& error, size_t byte
     {
         if (error == boost::asio::error::operation_aborted) // if this call is the result of a timer cancel()
         {
-            LOG_WARN << UART_CLIENT " disconnected from " << m_strPortName;
+            LOG_WARN << "UART_CLIENT disconnected from " << m_strPortName;
             SetupAsync();
             return; // ignore it because the connection canceled the timer
         }
