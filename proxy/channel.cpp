@@ -13,11 +13,11 @@
 IMPLEMENT_MODULE_TAG(CChannel, "CHNL");
 
 CChannel::CChannel(boost::property_tree::ptree& pt) :
-    m_id(pt.get<size_t>("id")) // can be throw if config incorrect
+    m_id(pt.get<std::string>("id")) // can be throw if config incorrect
 {
     CManager* manager = CManager::instance();
-    size_t sourceId = pt.get<size_t>("source");     // can be throw if config incorrect
-    size_t destId = pt.get<size_t>("destination");   // can be throw if config incorrect
+    std::string sourceId = pt.get<std::string>("source");     // can be throw if config incorrect
+    std::string destId = pt.get<std::string>("destination");   // can be throw if config incorrect
     m_source = manager->FindActor(sourceId);
     if (m_source.expired())
     {

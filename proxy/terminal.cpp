@@ -13,7 +13,7 @@ IMPLEMENT_MODULE_TAG(CTerminal, "UART");
 
 //////////////////////////////////////////////////////////////////////////
 CTerminal::CTerminal(boost::property_tree::ptree& pt) :
-    CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
+    CActor(pt.get<std::string>("name"), pt.get<std::string>("id")),
     m_ioService(CManager::instance()->IoService()),
     m_pt(pt),
     m_inBuffSize(pt.get<uint16_t>("input_buffer_size", 1024)),

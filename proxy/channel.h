@@ -16,7 +16,7 @@ public:
     explicit CChannel(boost::property_tree::ptree& pt);
     virtual ~CChannel();
 
-    size_t GetId() const { return m_id; }
+    const std::string& GetId() const { return m_id; }
     void Connect();
     void Disconnect();
 
@@ -24,7 +24,7 @@ public:
 
 private:
     std::mutex m_mtx;
-    size_t m_id;
+    std::string m_id;
     std::weak_ptr<CActor> m_source;
     std::weak_ptr<CActor> m_destination;
     boost::signals2::connection m_connectionSource;

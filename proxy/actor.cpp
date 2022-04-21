@@ -55,13 +55,13 @@ CActor* CActor::MakeActor(boost::property_tree::ptree& pt)
     CActor* actor = nullptr;
     std::string actorName;
     std::string actorProto;
-    int32_t actorId = -1;
+    std::string actorId;
 
     try
     {
         actorName = pt.get<std::string>("name", "UNKNOWN");
         actorProto = pt.get<std::string>("protocol", NO_PROTO);
-        actorId = pt.get<int32_t>("id", -1);
+        actorId = pt.get<std::string>("id", "");
         LOG_DEBUG << "Begin creating actor " << actorName << "(protocol = " << actorProto << ", id = " << actorId << ")";
 
         if (actorName == TCP_SERVER)

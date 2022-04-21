@@ -14,7 +14,7 @@ IMPLEMENT_MODULE_TAG(CManagerAdaptor, "MCMD");
 
 //////////////////////////////////////////////////////////////////////////
 CManagerAdaptor::CManagerAdaptor(boost::property_tree::ptree& pt) :
-    CActor(pt.get<std::string>("name"), pt.get<size_t>("id"))
+    CActor(pt.get<std::string>("name"), pt.get<std::string>("id"))
 {
     try
     {

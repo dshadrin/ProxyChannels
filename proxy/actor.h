@@ -43,14 +43,14 @@ std::string ConvertId2ProtocolName(ENetProtocol pId);
 class CActor
 {
 public:
-    CActor(const std::string& tag, size_t id) : m_tag(tag), m_id(id) {}
+    CActor(const std::string& tag, const std::string& id) : m_tag(tag), m_id(id) {}
     virtual ~CActor() = default;
 
     virtual void Start() = 0;
     virtual void Stop() = 0;
     virtual std::string GetName() const = 0;
     const std::string& GetTag() const { return m_tag; }
-    size_t GetId() const { return m_id; }
+    const std::string& GetId() const { return m_id; }
 
     signal_msg_t m_sigInputMessage;
     signal_msg_t m_sigOutputMessage;
@@ -59,5 +59,5 @@ public:
 
 protected:
     const std::string m_tag;
-    const size_t m_id;
+    const std::string m_id;
 };

@@ -104,7 +104,7 @@ void CManager::Stop()
     m_stopCond.notify_all();
 }
 
-std::weak_ptr<CActor> CManager::FindActor(size_t id)
+std::weak_ptr<CActor> CManager::FindActor( std::string id)
 {
     auto it = m_actors.find(id);
     return (it != m_actors.end()) ? it->second : nullptr;
@@ -153,7 +153,7 @@ void CManager::RunActors()
                 {
                     if (m_actors.find(actor->GetId()) == m_actors.end())
                     {
-                        size_t id = actor->GetId();
+                        std::string id = actor->GetId();
                         auto it = m_actors.insert(std::make_pair(id, actor));
                         if (it.second)
                         {
@@ -192,13 +192,13 @@ void CManager::SetChannels()
     bpt::ptree& tChannels = cnf->getSubTree("proxy.channels");
     for (auto& chCnf : tChannels)
     {
-        size_t channelId = 0;
+        std::string channelId;
         try
         {
             if (chCnf.first == "channel")
             {
                 std::unique_lock<std::mutex> lock(m_actorsMtx);
-                channelId = chCnf.second.get<size_t>("id");
+                channelId = chCnf.second.get<std::string>("id");
                 std::shared_ptr<CChannel> channel = std::make_shared<CChannel>(chCnf.second);
                 if (channel)
                 {

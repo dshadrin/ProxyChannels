@@ -5,7 +5,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 CLogAdaptor::CLogAdaptor(boost::property_tree::ptree& pt) :
-    CActor(pt.get<std::string>("name"), pt.get<size_t>("id"))
+    CActor(pt.get<std::string>("name"), pt.get<std::string>("id"))
 {
     boost::property_tree::ptree ptSinks = pt.get_child("sinks");
     for (auto& ptSink : ptSinks)

@@ -14,7 +14,7 @@ IMPLEMENT_MODULE_TAG(CConsoleActor, "CON ");
 //////////////////////////////////////////////////////////////////////////
 
 CConsoleActor::CConsoleActor(boost::property_tree::ptree& pt) :
-    CActor(pt.get<std::string>("name"), pt.get<size_t>("id")),
+    CActor(pt.get<std::string>("name"), pt.get<std::string>("id")),
     m_ioService(CManager::instance()->IoService()),
 #ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
     m_in(m_ioService, ::dup(STDIN_FILENO)),
@@ -24,7 +24,7 @@ CConsoleActor::CConsoleActor(boost::property_tree::ptree& pt) :
     m_steadyTimer(m_ioService, std::chrono::nanoseconds( m_delayNs ))
 #endif
 {
-    LOG_DEBUG << "ID is " << pt.get<size_t>( "id" );
+    LOG_DEBUG << "ID is " << pt.get<std::string>( "id" );
     LOG_DEBUG << "Delay is " << pt.get<uint32_t>( "timer-delay", 100 ) << "ms";
 }
 

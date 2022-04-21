@@ -22,7 +22,7 @@ public:
 
     boost::asio::io_service& IoService() { return m_ioService; }
     thread_pool& ThreadPool() { return m_tp; }
-    std::weak_ptr<CActor> FindActor(size_t id);
+    std::weak_ptr<CActor> FindActor( std::string id);
     bool IsStopped() const { return m_stopFlag; }
 
 private:
@@ -37,8 +37,8 @@ private:
     std::condition_variable m_stopCond;
 
     std::mutex m_actorsMtx;
-    std::map<size_t, std::shared_ptr<CActor>> m_actors;
-    std::map<size_t, std::shared_ptr<CChannel>> m_channels;
+    std::map<std::string, std::shared_ptr<CActor>> m_actors;
+    std::map<std::string, std::shared_ptr<CChannel>> m_channels;
 
 private:
     void AsioServiceWork();
