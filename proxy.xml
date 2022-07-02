@@ -210,6 +210,40 @@
       <id>CMD-MANAGER</id>
       <name>MANAGER_ADAPTOR</name>
     </actor>
+
+    <actor>
+        <id>OSCARLOG</id>
+        <name>TCP_SERVER</name>
+        <port>2100</port>
+        <input_buffer_size>6</input_buffer_size>
+        <protocol>OSCAR</protocol>
+    </actor>
+    <actor>
+        <id>OSCAR-LOG-ADAPTER</id>
+        <name>LOGGER_ADAPTOR</name>
+        <protocol>OSCAR</protocol>
+        <sinks>
+            <sink>
+                <id>3</id>
+            </sink>
+        </sinks>
+    </actor>
+    <actor>
+        <id>TELNET-2006</id>
+        <!-- name - predeclares value in actor.h -->
+        <name>TCP_SERVER</name>
+        <port>2006</port>
+        <input_buffer_size>4096</input_buffer_size>
+        <protocol>TELNET</protocol>
+    </actor>
+    <actor>
+        <id>TELNET-2007</id>
+        <!-- name - predeclares value in actor.h -->
+        <name>TCP_SERVER</name>
+        <port>2007</port>
+        <input_buffer_size>4096</input_buffer_size>
+        <protocol>TELNET</protocol>
+    </actor>
   </actors>
   <channels>
     <channel>
@@ -257,6 +291,11 @@
       <id>MANAGER-TO-CMD-CONSOLE</id>
       <source>CMD-MANAGER</source>
       <destination>CMD-CONSOLE</destination>
+    </channel>
+    <channel>
+        <id>OSCAR-TO-LOG</id>
+        <source>OSCARLOG</source>
+        <destination>OSCAR-LOG-ADAPTER</destination>
     </channel>
   </channels>
     <UNUSED-NOW-BUT-CAM-BE-TURNED-ON>

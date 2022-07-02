@@ -1,5 +1,8 @@
-// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+/*
+ * Copyright (C) 2018-2022 dshadrin@gmail.com
+ * All rights reserved.
+ */
+
 #include "logclient.h"
 #include "utils/strace_exception.h"
 #include "utils/timestamp.h"
@@ -62,11 +65,11 @@ CLogClient::CLogClient(const boost::property_tree::ptree& pt) :
 
 CLogClient* CLogClient::Get()
 {
-    static boost::mutex mtx;
+    static std::mutex mtx;
 
     if (!s_logClientPtr)
     {
-        boost::mutex::scoped_lock lock(mtx);
+        std::lock_guard<std::mutex> lock(mtx);
         if (!s_logClientPtr)
         {
             boost::property_tree::ptree pt = CLogClient::ReadConfiguration();
@@ -111,7 +114,7 @@ void CLogClient::WaitQueueEmpty()
 {
     while (!m_queue.empty())
     {
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 
@@ -121,10 +124,10 @@ boost::property_tree::ptree CLogClient::ReadConfiguration()
 
     try
     {
-        boost::filesystem::path cfgname(boost::filesystem::current_path());
+        std::filesystem::path cfgname(std::filesystem::current_path());
         cfgname /= "proxy.xml";
 
-        if (boost::filesystem::exists(cfgname))
+        if (std::filesystem::exists(cfgname))
         {
             boost::property_tree::ptree pt;
             boost::property_tree::xml_parser::read_xml(cfgname.string(), pt);
@@ -185,7 +188,7 @@ void CLogClient::WriteHandler(const boost::system::error_code &ec, std::size_t b
         else
         {
             {
-                boost::mutex::scoped_lock lock(m_mutex);
+                std::lock_guard<std::mutex> lock(m_mutex);
                 m_writeInProgress = false;
             }
             WriteNextMessage();
@@ -199,7 +202,7 @@ void CLogClient::WriteHandler(const boost::system::error_code &ec, std::size_t b
 
 void CLogClient::WriteNextMessage()
 {
-    boost::mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     if (!m_writeInProgress)
     {
         boost::optional<std::shared_ptr<SLogPackage>> op = m_queue.pop_try(0);

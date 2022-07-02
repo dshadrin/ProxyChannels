@@ -1,5 +1,8 @@
-// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+/*
+ * Copyright (C) 2018-2022 dshadrin@gmail.com
+ * All rights reserved.
+ */
+
 #include "stdinc.h"
 #include "configurator.h"
 #include <boost/property_tree/xml_parser.hpp>

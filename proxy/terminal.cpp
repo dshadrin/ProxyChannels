@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2017 Rhonda Software.
+ * Copyright (C) 2018-2022 dshadrin@gmail.com
  * All rights reserved.
  */
 

@@ -5,6 +5,7 @@
 #include "oscar/flap_builder.h"
 #include <boost/asio.hpp>
 #include <thread>
+#include <mutex>
 #include <boost/noncopyable.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -35,8 +36,8 @@ private:
     boost::asio::io_service m_ioService;
     CLockQueue<std::shared_ptr<SLogPackage>> m_queue;
 
-    boost::mutex m_mutex;
-    boost::thread m_thread;
+    std::mutex m_mutex;
+    std::thread m_thread;
     bool m_writeInProgress;
     bool m_stopInProgress;
     ELoggingMode m_loggingMode;

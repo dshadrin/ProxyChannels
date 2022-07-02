@@ -1,7 +1,7 @@
 /*
-* Copyright (C) 2018 Rhonda Software.
-* All rights reserved.
-*/
+ * Copyright (C) 2018-2022 dshadrin@gmail.com
+ * All rights reserved.
+ */
 
 #include "stdinc.h"
 #include "logger.h"

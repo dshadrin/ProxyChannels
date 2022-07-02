@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2018-2022 dshadrin@gmail.com
+ * All rights reserved.
+ */
+
 #include "stdinc.h"
 #include "actor.h"
 #include "tcpserver.h"
